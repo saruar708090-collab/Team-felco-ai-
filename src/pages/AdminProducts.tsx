@@ -20,10 +20,13 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
   // Form states
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [detailedDescription, setDetailedDescription] = useState('');
   const [price, setPrice] = useState('');
+  const [originalPrice, setOriginalPrice] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [category, setCategory] = useState('Colour Trading Hack');
   const [active, setActive] = useState(true);
+  const [soldOut, setSoldOut] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
@@ -98,10 +101,13 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
     setEditingProduct(null);
     setName('');
     setDescription('');
+    setDetailedDescription('');
     setPrice('');
+    setOriginalPrice('');
     setImageUrl('');
     setCategory('Colour Trading Hack');
     setActive(true);
+    setSoldOut(false);
     setModalOpen(true);
   };
 
@@ -109,10 +115,13 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
     setEditingProduct(product);
     setName(product.name);
     setDescription(product.description);
+    setDetailedDescription(product.detailedDescription || '');
     setPrice(product.price.toString());
+    setOriginalPrice(product.originalPrice ? product.originalPrice.toString() : '');
     setImageUrl(product.imageUrl);
     setCategory(product.category || 'Colour Trading Hack');
     setActive(product.active);
+    setSoldOut(!!product.soldOut);
     setModalOpen(true);
   };
 
@@ -124,10 +133,13 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
         id,
         name,
         description,
+        detailedDescription: detailedDescription || undefined,
         price: parseFloat(price) || 0,
+        originalPrice: originalPrice ? parseFloat(originalPrice) : undefined,
         imageUrl,
         category,
         active,
+        soldOut,
         updatedAt: new Date().toISOString()
       };
 
@@ -206,17 +218,34 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
                 <div>
                   <div className="flex items-start justify-between gap-4 mb-4">
                     <div className="flex items-center space-x-3">
-                      <img src={product.imageUrl} alt={product.name} className="w-14 h-14 object-cover rounded-xl bg-neutral-900 shrink-0" />
+                      <div className="relative shrink-0">
+                        <img src={product.imageUrl} alt={product.name} className="w-14 h-14 object-cover rounded-xl bg-neutral-900" />
+                        {product.soldOut && (
+                          <div className="absolute inset-0 bg-red-600/75 rounded-xl flex items-center justify-center">
+                            <span className="text-[7px] font-black uppercase text-white tracking-widest text-center leading-none">SOLD OUT</span>
+                          </div>
+                        )}
+                      </div>
                       <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-black uppercase tracking-wide text-base">{product.name}</h3>
+                        <div className="flex items-center flex-wrap gap-1.5">
+                          <h3 className="font-black uppercase tracking-wide text-sm sm:text-base">{product.name}</h3>
                           {product.category && (
                             <span className="text-[9px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-extrabold uppercase px-2 py-0.5 rounded">
                               {product.category}
                             </span>
                           )}
+                          {product.soldOut && (
+                            <span className="text-[8px] bg-rose-600 text-white font-extrabold uppercase px-1.5 py-0.5 rounded animate-pulse">
+                              SOLD OUT
+                            </span>
+                          )}
                         </div>
-                        <span className="text-xs font-mono font-bold text-neutral-400">${product.price.toFixed(2)} USD</span>
+                        <div className="flex items-center gap-2 text-xs font-mono font-bold text-neutral-400 mt-0.5">
+                          {product.originalPrice && product.originalPrice > product.price && (
+                            <span className="line-through text-red-500">BDT {product.originalPrice}</span>
+                          )}
+                          <span className="text-emerald-400">BDT {product.price}</span>
+                        </div>
                       </div>
                     </div>
                     <button 
@@ -255,60 +284,100 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
 
         {/* Add/Edit Modal */}
         {modalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-85 backdrop-blur-sm">
-            <div className="bg-neutral-900 border border-neutral-800 text-white w-full max-w-lg rounded-2xl p-6 sm:p-8 shadow-2xl relative">
-              <div className="flex items-center justify-between mb-6">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-85 backdrop-blur-sm overflow-y-auto">
+            <div className="bg-neutral-900 border border-neutral-800 text-white w-full max-w-lg rounded-2xl p-6 sm:p-8 shadow-2xl relative my-8 max-h-[90vh] flex flex-col">
+              <div className="flex items-center justify-between mb-6 shrink-0 border-b border-neutral-800/80 pb-4">
                 <h3 className="text-xl font-black uppercase tracking-tight">{editingProduct ? 'Edit Product' : 'Add New Product'}</h3>
-                <button onClick={() => setModalOpen(false)} className="text-neutral-400 hover:text-white">
+                <button onClick={() => setModalOpen(false)} className="text-neutral-400 hover:text-white transition-colors">
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <form onSubmit={handleSaveProduct} className="space-y-4">
+              <form onSubmit={handleSaveProduct} className="space-y-5 overflow-y-auto pr-1 flex-1 pb-4 scrollbar-thin scrollbar-thumb-neutral-800">
                 <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-1">Product Name</label>
+                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-1">Product Name (প্রোডাক্টের নাম)</label>
                   <input 
                     type="text"
                     value={name}
                     onChange={e => setName(e.target.value)}
                     required
-                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-white"
+                    placeholder="e.g. BDWIN VIP Colour Hack"
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-white transition-colors"
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-1">Description</label>
+                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-1">Description (সংক্ষিপ্ত বিবরণ)</label>
                   <textarea 
                     value={description}
                     onChange={e => setDescription(e.target.value)}
                     rows={2}
                     required
-                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-white resize-none"
+                    placeholder="প্রোডাক্ট কার্ডে দেখানোর জন্য সংক্ষিপ্ত বিবরণ..."
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-white resize-none transition-colors"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-1">Detailed Guide / Instructions (পূর্ণ নির্দেশিকা / বিস্তারিত বিবরণ - Optional)</label>
+                  <textarea 
+                    value={detailedDescription}
+                    onChange={e => setDetailedDescription(e.target.value)}
+                    rows={4}
+                    placeholder="কাস্টমার প্রোডাক্টটিতে ক্লিক করলে যে বিস্তারিত টিউটোরিয়াল বা বিবরণ দেখতে পাবে তা এখানে লিখুন..."
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-white resize-y transition-colors"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-1">Price (USD)</label>
+                    <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-1">Discounted Price (বর্তমান দাম BDT)</label>
                     <input 
                       type="number"
-                      step="0.01"
+                      step="1"
                       value={price}
                       onChange={e => setPrice(e.target.value)}
                       required
-                      className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-white font-mono"
+                      placeholder="e.g. 4500"
+                      className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-white font-mono transition-colors"
                     />
                   </div>
 
                   <div>
-                    <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-1">Status</label>
+                    <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-1">Original Price (আসল দাম BDT - Optional)</label>
+                    <input 
+                      type="number"
+                      step="1"
+                      value={originalPrice}
+                      onChange={e => setOriginalPrice(e.target.value)}
+                      placeholder="e.g. 6000"
+                      className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-white font-mono transition-colors"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-1">Status (সক্রিয়তা)</label>
                     <select
                       value={active ? 'true' : 'false'}
                       onChange={e => setActive(e.target.value === 'true')}
-                      className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-white"
+                      className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-white transition-colors"
                     >
-                      <option value="true">Active</option>
-                      <option value="false">Inactive</option>
+                      <option value="true">Active (সক্রিয়)</option>
+                      <option value="false">Inactive (নিষ্ক্রিয়)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-rose-400 block mb-1">Stock Status (স্টক অবস্থা)</label>
+                    <select
+                      value={soldOut ? 'true' : 'false'}
+                      onChange={e => setSoldOut(e.target.value === 'true')}
+                      className="w-full bg-neutral-950 border border-rose-500/30 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-rose-500 font-bold transition-colors"
+                    >
+                      <option value="false">In Stock (স্টক আছে)</option>
+                      <option value="true">🔴 SOLD OUT (সোল্ড আউট)</option>
                     </select>
                   </div>
                 </div>
@@ -319,7 +388,7 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
                     <select
                       value={category}
                       onChange={e => setCategory(e.target.value)}
-                      className="w-full bg-neutral-950 border border-emerald-500/30 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-emerald-500 font-bold"
+                      className="w-full bg-neutral-950 border border-emerald-500/30 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-emerald-500 font-bold transition-colors"
                     >
                       <option value="Colour Trading Hack">Colour Trading Hack</option>
                       <option value="Aviator Hack">Aviator Hack</option>
@@ -368,13 +437,13 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
                         value={imageUrl}
                         onChange={e => setImageUrl(e.target.value)}
                         placeholder="Or paste direct image URL..."
-                        className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-white font-mono"
+                        className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-white font-mono transition-colors"
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="flex justify-end space-x-3 pt-4">
+                <div className="flex justify-end space-x-3 pt-4 border-t border-neutral-800/80 shrink-0">
                   <button 
                     type="button"
                     onClick={() => setModalOpen(false)}
@@ -384,7 +453,7 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
                   </button>
                   <button 
                     type="submit"
-                    className="px-6 py-3 bg-white text-black font-extrabold uppercase text-xs tracking-widest rounded-xl hover:bg-neutral-200 transition-colors"
+                    className="px-6 py-3 bg-emerald-500 text-black font-extrabold uppercase text-xs tracking-widest rounded-xl hover:bg-emerald-400 transition-colors"
                   >
                     Save Product
                   </button>

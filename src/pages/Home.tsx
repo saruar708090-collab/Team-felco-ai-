@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Product, OrderDraft } from '../types';
 import { db } from '../firebase';
 import { collection, getDocs } from 'firebase/firestore';
-import { ArrowRight, Search, ShieldCheck, Star, MessageSquare, Gamepad2 } from 'lucide-react';
+import { ArrowRight, Search, ShieldCheck, Star, MessageSquare, Gamepad2, X } from 'lucide-react';
 import { ProductReviewsModal } from '../components/ProductReviewsModal';
 
 interface HomeProps {
@@ -19,6 +19,7 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [viewingProductDetails, setViewingProductDetails] = useState<Product | null>(null);
 
   const categories = ['All', 'HGNICE', 'DKWIN', 'BDWIN', '1X BET', 'CK444'];
 
@@ -178,16 +179,34 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
                     : 'bg-neutral-900/80 border-neutral-800 hover:border-neutral-500'
                 }`}
               >
-                <div>
+                <div onClick={() => setViewingProductDetails(product)} className="cursor-pointer group/card flex-1 flex flex-col justify-start" title="প্রোডাক্টের বিস্তারিত দেখতে এখানে চাপুন">
                   <div className={`relative h-32 sm:h-52 overflow-hidden ${isLight ? 'bg-slate-100' : 'bg-neutral-950'}`}>
+                    {product.soldOut && (
+                      <div className="absolute inset-0 bg-black/75 backdrop-blur-[1px] flex items-center justify-center z-10">
+                        <span className="bg-red-600 text-white font-black text-[10px] sm:text-xs uppercase tracking-widest px-3 py-1.5 rounded-lg shadow-lg border border-red-500 animate-pulse">
+                          SOLD OUT
+                        </span>
+                      </div>
+                    )}
                     <img 
                       src={product.imageUrl || 'https://images.unsplash.com/photo-1642543492481-44e81e3914a7?w=800&auto=format&fit=crop&q=60'} 
                       alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${product.soldOut ? 'opacity-50 grayscale' : ''}`}
                     />
-                    <div className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-black/80 backdrop-blur-md border border-neutral-700 px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black tracking-wider text-emerald-400">
-                      BDT {product.price}
+                    <div className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-black/85 backdrop-blur-md border border-neutral-800 px-2.5 py-1 sm:py-1.5 rounded-lg text-[9px] sm:text-xs font-black tracking-wider text-emerald-400 flex flex-col items-end gap-0.5">
+                      {product.originalPrice && product.originalPrice > product.price && (
+                        <span className="text-[7px] sm:text-[9px] line-through text-red-500 font-extrabold block">
+                          BDT {product.originalPrice}
+                        </span>
+                      )}
+                      <span>BDT {product.price}</span>
                     </div>
+
+                    {product.originalPrice && product.originalPrice > product.price && !product.soldOut && (
+                      <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 bg-rose-600 text-white text-[8px] sm:text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider animate-bounce">
+                        SAVE {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
+                      </div>
+                    )}
                   </div>
 
                   <div className="p-3 sm:p-5 space-y-1.5">
@@ -208,15 +227,18 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
 
                 <div className="p-3 sm:p-5 pt-0 space-y-2">
                   <button 
-                    onClick={() => handleBuyNow(product)}
-                    className={`w-full py-2.5 sm:py-3 font-extrabold uppercase text-[10px] sm:text-xs tracking-widest rounded-xl transition-colors flex items-center justify-center gap-1.5 shadow-md group/btn ${
-                      isLight 
-                        ? 'bg-neutral-900 text-white hover:bg-neutral-800' 
-                        : 'bg-white text-black hover:bg-neutral-200'
+                    onClick={() => !product.soldOut && handleBuyNow(product)}
+                    disabled={product.soldOut}
+                    className={`w-full py-2.5 sm:py-3 font-extrabold uppercase text-[10px] sm:text-xs tracking-widest rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-md group/btn ${
+                      product.soldOut
+                        ? 'bg-neutral-800 border border-neutral-700 text-neutral-500 cursor-not-allowed opacity-60'
+                        : isLight 
+                          ? 'bg-neutral-900 text-white hover:bg-neutral-800' 
+                          : 'bg-white text-black hover:bg-neutral-200'
                     }`}
                   >
-                    <span>Buy Now</span>
-                    <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-0.5 transition-transform" />
+                    <span>{product.soldOut ? 'Sold Out' : 'Buy Now'}</span>
+                    {!product.soldOut && <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-0.5 transition-transform" />}
                   </button>
 
                   <button
@@ -242,6 +264,116 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
         isOpen={!!selectedProduct}
         onClose={() => setSelectedProduct(null)}
       />
+
+      {/* Product Details Modal */}
+      {viewingProductDetails && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-90 backdrop-blur-sm overflow-y-auto animate-fadeIn">
+          <div className={`border text-white w-full max-w-lg rounded-2xl p-6 sm:p-8 shadow-2xl relative my-8 max-h-[90vh] flex flex-col transition-colors ${isLight ? 'bg-white border-slate-200 text-neutral-900' : 'bg-[#0d0d10] border-neutral-800'}`}>
+            {/* Header */}
+            <div className={`flex items-center justify-between mb-6 shrink-0 border-b pb-4 ${isLight ? 'border-slate-100' : 'border-neutral-800'}`}>
+              <div>
+                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-500 border border-emerald-500/30">
+                  {viewingProductDetails.category || 'HGNICE'}
+                </span>
+                <h3 className={`text-base sm:text-lg font-black uppercase tracking-tight mt-1.5 ${isLight ? 'text-neutral-900' : 'text-white'}`}>
+                  {viewingProductDetails.name}
+                </h3>
+              </div>
+              <button 
+                onClick={() => setViewingProductDetails(null)} 
+                className={`transition-colors ${isLight ? 'text-neutral-400 hover:text-neutral-900' : 'text-neutral-400 hover:text-white'}`}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Scrollable Content */}
+            <div className="overflow-y-auto pr-1 flex-1 pb-4 space-y-5 scrollbar-thin">
+              {/* Product Image */}
+              <div className="relative aspect-video rounded-xl overflow-hidden bg-neutral-950 shadow-md">
+                <img 
+                  src={viewingProductDetails.imageUrl || 'https://images.unsplash.com/photo-1642543492481-44e81e3914a7?w=800&auto=format&fit=crop&q=60'} 
+                  alt={viewingProductDetails.name} 
+                  className="w-full h-full object-cover" 
+                />
+                {viewingProductDetails.soldOut && (
+                  <div className="absolute inset-0 bg-black/75 backdrop-blur-[1px] flex items-center justify-center">
+                    <span className="bg-red-600 text-white font-black text-xs uppercase tracking-widest px-4 py-2 rounded-xl shadow-lg border border-red-500 animate-pulse">
+                      SOLD OUT
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Pricing Block */}
+              <div className={`p-4 rounded-xl border flex items-center justify-between ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-neutral-950 border-neutral-900'}`}>
+                <div>
+                  <span className={`text-[10px] uppercase font-bold block ${isLight ? 'text-neutral-500' : 'text-neutral-400'}`}>Price (মূল্য):</span>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    {viewingProductDetails.originalPrice && viewingProductDetails.originalPrice > viewingProductDetails.price && (
+                      <span className="line-through text-red-500 font-bold text-sm">BDT {viewingProductDetails.originalPrice}</span>
+                    )}
+                    <span className="text-emerald-500 font-black text-xl">BDT {viewingProductDetails.price}</span>
+                  </div>
+                </div>
+                {viewingProductDetails.originalPrice && viewingProductDetails.originalPrice > viewingProductDetails.price && !viewingProductDetails.soldOut && (
+                  <span className="bg-rose-600 text-white text-[10px] font-black px-3 py-1.5 rounded-lg uppercase tracking-wider animate-bounce">
+                    SAVE {Math.round(((viewingProductDetails.originalPrice - viewingProductDetails.price) / viewingProductDetails.originalPrice) * 100)}%
+                  </span>
+                )}
+              </div>
+
+              {/* Description & Guide */}
+              <div className="space-y-4">
+                <div>
+                  <h4 className={`text-[10px] sm:text-xs uppercase font-extrabold tracking-widest ${isLight ? 'text-neutral-500' : 'text-neutral-400'}`}>Short Summary (সংক্ষিপ্ত বিবরণ)</h4>
+                  <p className={`text-xs mt-1 leading-relaxed ${isLight ? 'text-neutral-700' : 'text-neutral-300'}`}>
+                    {viewingProductDetails.description}
+                  </p>
+                </div>
+
+                {viewingProductDetails.detailedDescription && (
+                  <div className={`pt-4 border-t ${isLight ? 'border-slate-100' : 'border-neutral-800'}`}>
+                    <h4 className="text-[10px] sm:text-xs uppercase font-extrabold tracking-widest text-emerald-500">Detailed Guide & Instructions (বিস্তারিত নির্দেশিকা)</h4>
+                    <p className={`text-xs mt-2 leading-relaxed whitespace-pre-line ${isLight ? 'text-neutral-800' : 'text-neutral-200'}`}>
+                      {viewingProductDetails.detailedDescription}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Footer Action Button */}
+            <div className={`pt-4 border-t shrink-0 flex items-center justify-end space-x-3 ${isLight ? 'border-slate-100' : 'border-neutral-800'}`}>
+              <button 
+                onClick={() => setViewingProductDetails(null)} 
+                className={`px-5 py-3 rounded-xl font-bold uppercase text-xs tracking-wider transition-colors ${isLight ? 'bg-slate-100 text-neutral-700 hover:bg-slate-200' : 'bg-neutral-800 text-white hover:bg-neutral-700'}`}
+              >
+                Close (বন্ধ করুন)
+              </button>
+              <button 
+                onClick={() => {
+                  if (!viewingProductDetails.soldOut) {
+                    handleBuyNow(viewingProductDetails);
+                    setViewingProductDetails(null);
+                  }
+                }}
+                disabled={viewingProductDetails.soldOut}
+                className={`px-6 py-3 font-extrabold uppercase text-xs tracking-widest rounded-xl transition-all flex items-center gap-1.5 shadow-md ${
+                  viewingProductDetails.soldOut
+                    ? 'bg-neutral-800 border border-neutral-700 text-neutral-500 cursor-not-allowed opacity-60'
+                    : isLight 
+                      ? 'bg-neutral-900 text-white hover:bg-neutral-800' 
+                      : 'bg-emerald-500 text-black hover:bg-emerald-400'
+                }`}
+              >
+                <span>{viewingProductDetails.soldOut ? 'Sold Out' : 'Buy Now (অর্ডার করুন)'}</span>
+                {!viewingProductDetails.soldOut && <ArrowRight className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -77,7 +77,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentRoute, na
 
   return (
     <AdminLayout currentRoute={currentRoute} navigate={navigate}>
-      <div className="max-w-6xl mx-auto space-y-8">
+      <div className="w-full min-h-full flex flex-col justify-start space-y-8 pb-12">
         <div>
           <span className="text-xs uppercase font-bold tracking-widest text-neutral-400 block mb-1">Admin Overview</span>
           <h1 className="text-3xl font-black uppercase tracking-tight">Dashboard Metrics</h1>

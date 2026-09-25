@@ -2,10 +2,13 @@ export interface Product {
   id: string;
   name: string;
   description: string;
+  detailedDescription?: string;
   price: number;
+  originalPrice?: number;
   imageUrl: string;
   category?: string;
   active: boolean;
+  soldOut?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
