@@ -94,9 +94,9 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderDraft, navigate
         paymentTrxId,
         paymentScreenshotUrl: screenshotUrl,
         orderStatus: 'PENDING',
-        couponCode: orderDraft.couponCode,
-        discountAmount: orderDraft.discountAmount,
-        finalAmount: orderDraft.finalAmount,
+        couponCode: orderDraft.couponCode || '',
+        discountAmount: orderDraft.discountAmount || 0,
+        finalAmount: orderDraft.finalAmount || orderDraft.productPrice || 0,
         createdAt: new Date().toISOString()
       };
 
@@ -153,7 +153,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderDraft, navigate
               type="text"
               value={customerName}
               onChange={e => setCustomerName(e.target.value)}
-              placeholder="e.g. John Doe"
+              placeholder="আপনার পুরো নাম লিখুন"
               required
               className="w-full bg-[#0d0d12] border border-neutral-800 rounded-xl px-4 py-3 text-xs sm:text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors"
             />
@@ -166,7 +166,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderDraft, navigate
                 type="text"
                 value={whatsappNumber}
                 onChange={e => setWhatsappNumber(e.target.value)}
-                placeholder="e.g. +8801700000000"
+                placeholder="আপনার হোয়াটসঅ্যাপ নাম্বার"
                 required
                 className="w-full bg-[#0d0d12] border border-neutral-800 rounded-xl px-4 py-3 text-xs sm:text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors"
               />
@@ -178,7 +178,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderDraft, navigate
                 type="text"
                 value={telegramId}
                 onChange={e => setTelegramId(e.target.value)}
-                placeholder="e.g. @username"
+                placeholder="আপনার টেলিগ্রাম ইউজারনেম"
                 required
                 className="w-full bg-[#0d0d12] border border-neutral-800 rounded-xl px-4 py-3 text-xs sm:text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors"
               />
@@ -191,40 +191,56 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderDraft, navigate
               type="text"
               value={paymentTrxId}
               onChange={e => setPaymentTrxId(e.target.value.toUpperCase())}
-              placeholder="e.g. 9N74K29L1A"
+              placeholder="টাকা পাঠানোর ট্রানজেকশন আইডি (TrxID)"
               required
               className="w-full bg-[#0d0d12] border border-neutral-800 rounded-xl px-4 py-3 text-xs sm:text-sm font-mono text-emerald-400 focus:outline-none focus:border-emerald-500 transition-colors uppercase font-bold tracking-wider"
             />
           </div>
 
-          {/* Payment Screenshot Upload - Photo URL removed as requested */}
+          {/* Payment Screenshot Upload */}
           <div className="space-y-2 pt-1">
-            <label className="text-xs font-bold uppercase tracking-wider text-neutral-300">Payment Screenshot Proof *</label>
+            <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block">Payment Screenshot Proof *</label>
             
-            <div className="border-2 border-dashed border-neutral-800 rounded-xl p-5 text-center bg-[#0d0d12] hover:border-emerald-500/50 transition-colors">
-              <input 
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="hidden"
-                id="screenshot-upload"
-              />
-              <label htmlFor="screenshot-upload" className="cursor-pointer flex flex-col items-center space-y-2">
-                <div className="w-10 h-10 rounded-xl bg-neutral-900 border border-neutral-700 flex items-center justify-center text-emerald-400 shadow-md">
-                  <Upload className="w-4 h-4" />
-                </div>
-                <span className="text-xs font-bold uppercase tracking-wider text-neutral-200">Click to upload payment screenshot</span>
-                <span className="text-[10px] text-neutral-500">Supports PNG, JPG (Max 2MB)</span>
-              </label>
-            </div>
+            <input 
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="hidden"
+              id="screenshot-upload"
+            />
 
-            {screenshotUrl && (
-              <div className="p-3 bg-neutral-950 border border-emerald-500/30 rounded-xl flex items-center justify-between shadow-lg">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  <span className="text-xs font-medium text-emerald-300">Screenshot attached successfully</span>
+            {!screenshotUrl ? (
+              // Compact & Sleek Upload Box
+              <div className="border border-dashed border-neutral-800 rounded-xl py-4 px-5 text-center bg-[#0d0d12]/50 hover:border-emerald-500/50 hover:bg-[#0d0d12]/80 transition-all duration-200">
+                <label htmlFor="screenshot-upload" className="cursor-pointer flex flex-col items-center justify-center space-y-1.5">
+                  <div className="w-8 h-8 rounded-lg bg-neutral-900 border border-neutral-800 flex items-center justify-center text-emerald-500 shadow-sm shrink-0">
+                    <Upload className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="text-[11px] font-black uppercase tracking-wider text-neutral-200">Upload Screenshot</span>
+                  <span className="text-[9px] text-neutral-500">Tap to select payment receipt (Max 3MB)</span>
+                </label>
+              </div>
+            ) : (
+              // Ultra-Professional Attached Receipt Card
+              <div className="p-3 bg-[#0d0d12] border border-emerald-500/20 rounded-xl flex items-center justify-between gap-3 shadow-lg animate-fadeIn">
+                <div className="flex items-center gap-3 min-w-0">
+                  {/* Thumbnail Preview */}
+                  <div className="relative w-12 h-12 rounded-lg overflow-hidden border border-neutral-800 shrink-0 bg-neutral-900">
+                    <img src={screenshotUrl} alt="Attached Receipt" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-emerald-500/10" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      <span className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-400 truncate">Proof Attached</span>
+                    </div>
+                    <p className="text-[9px] text-neutral-400 mt-0.5 truncate font-mono">receipt_attachment.jpeg</p>
+                  </div>
                 </div>
-                <span className="text-[10px] bg-emerald-500/10 text-emerald-400 font-bold px-2 py-0.5 rounded border border-emerald-500/20">Ready</span>
+
+                <label htmlFor="screenshot-upload" className="cursor-pointer px-3 py-1.5 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-700 text-neutral-300 font-bold uppercase text-[9px] tracking-wider rounded-lg transition-colors shrink-0">
+                  Change Photo
+                </label>
               </div>
             )}
           </div>
