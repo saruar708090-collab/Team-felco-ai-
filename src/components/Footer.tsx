@@ -1,11 +1,13 @@
 import React from 'react';
 import { ShieldCheck, Zap } from 'lucide-react';
+import { StoreSettings } from '../types';
 
 interface FooterProps {
   navigate: (route: string) => void;
+  settings: StoreSettings | null;
 }
 
-export const Footer: React.FC<FooterProps> = ({ navigate }) => {
+export const Footer: React.FC<FooterProps> = ({ navigate, settings }) => {
   return (
     <footer className="bg-[#060608] text-white border-t border-neutral-900/80 pt-16 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -36,13 +38,13 @@ export const Footer: React.FC<FooterProps> = ({ navigate }) => {
             </ul>
           </div>
 
-          {/* Official Contacts (No raw links or numbers) */}
+          {/* Official Contacts (Dynamic links based on admin settings) */}
           <div>
             <h4 className="font-bold uppercase tracking-wider text-xs text-neutral-300 mb-4">Official Channels</h4>
             <div className="flex flex-col space-y-3">
               {/* Telegram */}
               <a 
-                href="https://t.me/+NRQwX88nKUQxYWY1" 
+                href={settings?.supportTelegram || "https://t.me/+NRQwX88nKUQxYWY1"} 
                 target="_blank" 
                 rel="noreferrer"
                 className="flex items-center gap-3.5 bg-neutral-950 border border-neutral-800 hover:border-neutral-600 rounded-xl p-3 transition-all group shadow"
@@ -60,7 +62,7 @@ export const Footer: React.FC<FooterProps> = ({ navigate }) => {
 
               {/* WhatsApp */}
               <a 
-                href="https://wa.me/8801613562615" 
+                href={`https://wa.me/${settings?.supportWhatsApp?.replace(/[^0-9]/g, '') || "8801613562615"}`} 
                 target="_blank" 
                 rel="noreferrer"
                 className="flex items-center gap-3.5 bg-neutral-950 border border-neutral-800 hover:border-neutral-600 rounded-xl p-3 transition-all group shadow"
@@ -78,7 +80,7 @@ export const Footer: React.FC<FooterProps> = ({ navigate }) => {
 
               {/* YouTube */}
               <a 
-                href="https://youtube.com/@teamfelco_78?si=y8LNiJ9C1MUsNA9Z" 
+                href={settings?.youtubeUrl || "https://youtube.com/@teamfelco_78?si=y8LNiJ9C1MUsNA9Z"} 
                 target="_blank" 
                 rel="noreferrer"
                 className="flex items-center gap-3.5 bg-neutral-950 border border-neutral-800 hover:border-neutral-600 rounded-xl p-3 transition-all group shadow"
@@ -93,6 +95,26 @@ export const Footer: React.FC<FooterProps> = ({ navigate }) => {
                   <div className="text-[10px] text-neutral-400">Watch tutorials</div>
                 </div>
               </a>
+
+              {/* Facebook Page (Conditional based on admin configuration) */}
+              {settings?.facebookUrl && (
+                <a 
+                  href={settings.facebookUrl} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="flex items-center gap-3.5 bg-neutral-950 border border-neutral-800 hover:border-neutral-600 rounded-xl p-3 transition-all group shadow"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-[#1877F2] text-white flex items-center justify-center font-black text-xs shadow-md shadow-[#1877F2]/20 group-hover:scale-105 transition-transform shrink-0">
+                    <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                  </div>
+                  <div className="text-left">
+                    <div className="font-bold text-xs uppercase tracking-wide text-white">Facebook Page</div>
+                    <div className="text-[10px] text-neutral-400">Join our community</div>
+                  </div>
+                </a>
+              )}
             </div>
           </div>
 

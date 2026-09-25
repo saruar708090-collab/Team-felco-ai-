@@ -23,6 +23,9 @@ export interface Order {
   paymentTrxId: string;
   paymentScreenshotUrl: string;
   orderStatus: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'CANCELLED';
+  couponCode?: string;
+  discountAmount?: number;
+  finalAmount?: number;
   createdAt: any;
   updatedAt?: any;
 }
@@ -38,6 +41,8 @@ export interface StoreSettings {
   rocketNumber: string;
   paymentInstructions: string;
   scrollingNotice?: string;
+  facebookUrl?: string;
+  youtubeUrl?: string;
 }
 
 export interface OrderDraft {
@@ -55,4 +60,8 @@ export interface OrderDraft {
   whatsappNumber?: string;
   paymentTrxId?: string;
   paymentScreenshotUrl?: string;
+  couponCode?: string;
+  discountAmount?: number;
+  finalAmount?: number;
+  productCategory?: string;
 }

@@ -113,6 +113,11 @@ export const AdminOrders: React.FC<AdminOrdersProps> = ({ currentRoute, navigate
                       <td className="p-4">
                         <div className="font-bold">{order.paymentMethod}</div>
                         <div className="font-mono text-[10px] text-neutral-400">{order.paymentTrxId}</div>
+                        {order.couponCode && (
+                          <div className="text-[9px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-extrabold uppercase px-1.5 py-0.5 rounded inline-block mt-0.5">
+                            {order.couponCode} (-{order.discountAmount})
+                          </div>
+                        )}
                       </td>
                       <td className="p-4">
                         <span className={`px-2.5 py-1 rounded-full font-black text-[10px] uppercase tracking-wider ${order.orderStatus === 'PENDING' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : order.orderStatus === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : order.orderStatus === 'PROCESSING' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
@@ -154,11 +159,11 @@ export const AdminOrders: React.FC<AdminOrdersProps> = ({ currentRoute, navigate
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs bg-neutral-950 p-4 rounded-xl border border-neutral-800">
                   <div>
                     <span className="text-neutral-500 block mb-0.5">Product</span>
-                    <span className="font-bold text-sm">{selectedOrder.productName}</span>
+                    <span className="font-bold text-sm text-white">{selectedOrder.productName}</span>
                   </div>
                   <div>
                     <span className="text-neutral-500 block mb-0.5">Selected Game</span>
-                    <span className="font-bold text-sm">{selectedOrder.selectedGame}</span>
+                    <span className="font-bold text-sm text-emerald-400">{selectedOrder.selectedGame}</span>
                   </div>
                   <div>
                     <span className="text-neutral-500 block mb-0.5">Customer Name</span>
@@ -175,6 +180,20 @@ export const AdminOrders: React.FC<AdminOrdersProps> = ({ currentRoute, navigate
                   <div>
                     <span className="text-neutral-500 block mb-0.5">Payment Method & TRX ID</span>
                     <span className="font-bold">{selectedOrder.paymentMethod}: <span className="font-mono">{selectedOrder.paymentTrxId}</span></span>
+                  </div>
+                  {selectedOrder.couponCode && (
+                    <div>
+                      <span className="text-emerald-400 block mb-0.5">Applied Coupon & Discount</span>
+                      <span className="font-bold text-emerald-400 font-mono">
+                        {selectedOrder.couponCode} (-BDT {selectedOrder.discountAmount})
+                      </span>
+                    </div>
+                  )}
+                  <div>
+                    <span className="text-neutral-500 block mb-0.5">Final Amount Paid</span>
+                    <span className="font-bold text-sm text-white font-mono">
+                      BDT {selectedOrder.finalAmount || 'Original Price BDT'}
+                    </span>
                   </div>
                 </div>
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Package, ShoppingCart, CreditCard, Headphones, Settings as SettingsIcon, LogOut, Shield } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, CreditCard, Headphones, Settings as SettingsIcon, LogOut, Shield, Percent } from 'lucide-react';
 import { auth } from '../firebase';
 
 interface AdminLayoutProps {
@@ -18,14 +18,15 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ currentRoute, navigate
     { label: 'Dashboard', route: '/admin/dashboard', icon: LayoutDashboard },
     { label: 'Products', route: '/admin/products', icon: Package },
     { label: 'Orders', route: '/admin/orders', icon: ShoppingCart },
+    { label: 'Coupons', route: '/admin/coupons', icon: Percent },
     { label: 'Payment Settings', route: '/admin/payment-settings', icon: CreditCard },
     { label: 'Customer Service', route: '/admin/customer-service', icon: Headphones },
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col md:flex-row">
+    <div className="min-h-screen md:h-screen bg-black text-white flex flex-col md:flex-row md:overflow-hidden overflow-y-auto">
       {/* Sidebar */}
-      <aside className="w-full md:w-64 bg-neutral-950 border-r border-neutral-900 flex flex-col justify-between p-6 shrink-0">
+      <aside className="w-full md:w-64 bg-neutral-950 border-r border-neutral-900 flex flex-col justify-between p-6 shrink-0 md:overflow-y-auto">
         <div>
           <div className="flex items-center space-x-3 mb-10 pb-6 border-b border-neutral-900">
             <div className="w-9 h-9 bg-white text-black flex items-center justify-center font-black rounded-lg">
@@ -74,7 +75,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ currentRoute, navigate
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto bg-black p-6 sm:p-10">
+      <main className="flex-1 bg-black p-4 sm:p-10 overflow-y-auto h-auto md:h-full">
         {children}
       </main>
     </div>

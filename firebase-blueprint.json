@@ -63,6 +63,18 @@
         "role": { "type": "string" }
       },
       "required": ["email"]
+    },
+    "Coupon": {
+      "title": "Coupon",
+      "description": "Discount coupon codes",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string", "maxLength": 50 },
+        "discountType": { "type": "string", "enum": ["percentage", "fixed"] },
+        "discountValue": { "type": "number" },
+        "active": { "type": "boolean" }
+      },
+      "required": ["code", "discountType", "discountValue", "active"]
     }
   },
   "firestore": {
@@ -81,6 +93,10 @@
     "/admins/{adminId}": {
       "schema": { "$ref": "#/entities/Admin" },
       "description": "Admin authorization collection"
+    },
+    "/coupons/{couponId}": {
+      "schema": { "$ref": "#/entities/Coupon" },
+      "description": "Discount coupon codes"
     }
   }
 }

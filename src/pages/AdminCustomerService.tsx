@@ -101,6 +101,30 @@ export const AdminCustomerService: React.FC<AdminCustomerServiceProps> = ({ curr
               </div>
             </div>
 
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-2">Facebook Page / Group URL (ফেসবুক লিংক)</label>
+                <input 
+                  type="url"
+                  value={settings.facebookUrl || ''}
+                  onChange={e => setSettings({ ...settings, facebookUrl: e.target.value })}
+                  placeholder="https://facebook.com/yourgroup"
+                  className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-white"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-2">YouTube Channel / Video URL (ইউটিউব লিংক)</label>
+                <input 
+                  type="url"
+                  value={settings.youtubeUrl || ''}
+                  onChange={e => setSettings({ ...settings, youtubeUrl: e.target.value })}
+                  placeholder="https://youtube.com/@yourchannel"
+                  className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-white"
+                />
+              </div>
+            </div>
+
             <div>
               <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-2">Support Banner Text</label>
               <textarea 

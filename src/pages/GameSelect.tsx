@@ -14,7 +14,7 @@ export const GameSelect: React.FC<GameSelectProps> = ({ orderDraft, setOrderDraf
     return null;
   }
 
-  const isColourTrading = orderDraft.productId === 'colour-trading-tool';
+  const isColourTrading = orderDraft.productCategory === 'Colour Trading Hack' || orderDraft.productId === 'colour-trading-tool';
   
   const games = [
     {

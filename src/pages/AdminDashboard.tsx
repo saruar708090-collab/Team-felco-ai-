@@ -20,7 +20,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentRoute, na
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Longer delay to ensure auth and rules are fully ready/propagated
+    // Shorter 100ms delay to feel near-instantaneous and load metrics immediately
     const timer = setTimeout(() => {
       if (auth.currentUser || localStorage.getItem('admin_bypassed') === 'true') {
         fetchDashboardData();
@@ -29,7 +29,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentRoute, na
         setLoading(false);
         setError('Authentication session not ready. Please try again.');
       }
-    }, 2000);
+    }, 100);
     return () => clearTimeout(timer);
   }, []);
 

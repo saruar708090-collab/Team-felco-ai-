@@ -22,7 +22,9 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
   const [imageUrl, setImageUrl] = useState('');
+  const [category, setCategory] = useState('Colour Trading Hack');
   const [active, setActive] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     fetchProducts();
@@ -38,7 +40,6 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
       setProducts(list);
     } catch (err: any) {
       console.error('Error fetching products', err);
-      // Detailed error for debugging permission issues
       const errorMessage = err.code === 'permission-denied' 
         ? 'Access Denied: Please wait 1-2 minutes for security rules to propagate and refresh page.' 
         : (err.message || String(err));
@@ -48,12 +49,58 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
     }
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 3 * 1024 * 1024) {
+      alert('File is too large. Please select an image under 3MB.');
+      return;
+    }
+
+    setIsUploading(true);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const max_size = 600; // Optimal size for high quality + low storage footprint
+
+        if (width > height) {
+          if (width > max_size) {
+            height *= max_size / width;
+            width = max_size;
+          }
+        } else {
+          if (height > max_size) {
+            width *= max_size / height;
+            height = max_size;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+        setImageUrl(dataUrl);
+        setIsUploading(false);
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleOpenAdd = () => {
     setEditingProduct(null);
     setName('');
     setDescription('');
     setPrice('');
     setImageUrl('');
+    setCategory('Colour Trading Hack');
     setActive(true);
     setModalOpen(true);
   };
@@ -64,6 +111,7 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
     setDescription(product.description);
     setPrice(product.price.toString());
     setImageUrl(product.imageUrl);
+    setCategory(product.category || 'Colour Trading Hack');
     setActive(product.active);
     setModalOpen(true);
   };
@@ -78,6 +126,7 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
         description,
         price: parseFloat(price) || 0,
         imageUrl,
+        category,
         active,
         updatedAt: new Date().toISOString()
       };
@@ -159,7 +208,14 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
                     <div className="flex items-center space-x-3">
                       <img src={product.imageUrl} alt={product.name} className="w-14 h-14 object-cover rounded-xl bg-neutral-900 shrink-0" />
                       <div>
-                        <h3 className="font-black uppercase tracking-wide text-base">{product.name}</h3>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-black uppercase tracking-wide text-base">{product.name}</h3>
+                          {product.category && (
+                            <span className="text-[9px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-extrabold uppercase px-2 py-0.5 rounded">
+                              {product.category}
+                            </span>
+                          )}
+                        </div>
                         <span className="text-xs font-mono font-bold text-neutral-400">${product.price.toFixed(2)} USD</span>
                       </div>
                     </div>
@@ -225,7 +281,7 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
                   <textarea 
                     value={description}
                     onChange={e => setDescription(e.target.value)}
-                    rows={3}
+                    rows={2}
                     required
                     className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-white resize-none"
                   />
@@ -257,16 +313,65 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
                   </div>
                 </div>
 
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-emerald-400 block mb-1">Hack Type (Category) *</label>
+                    <select
+                      value={category}
+                      onChange={e => setCategory(e.target.value)}
+                      className="w-full bg-neutral-950 border border-emerald-500/30 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-emerald-500 font-bold"
+                    >
+                      <option value="Colour Trading Hack">Colour Trading Hack</option>
+                      <option value="Aviator Hack">Aviator Hack</option>
+                    </select>
+                  </div>
+                </div>
+
                 <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-1">Image URL (HTTPS)</label>
-                  <input 
-                    type="url"
-                    value={imageUrl}
-                    onChange={e => setImageUrl(e.target.value)}
-                    placeholder="https://images.unsplash.com/..."
-                    required
-                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-white font-mono"
-                  />
+                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-1">Product Image (Gallery or Link) *</label>
+                  <div className="space-y-3">
+                    {/* Image preview box */}
+                    <div className={`w-full aspect-video rounded-xl border border-dashed flex items-center justify-center overflow-hidden bg-neutral-950 transition-colors ${imageUrl ? 'border-emerald-500/50' : 'border-neutral-800'}`}>
+                      {imageUrl ? (
+                        <img src={imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="flex flex-col items-center text-neutral-500">
+                          <ImageIcon className="w-8 h-8 mb-2 opacity-20" />
+                          <span className="text-[10px] uppercase font-bold tracking-widest">No Image Selected</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {/* Image Upload Button */}
+                      <label className={`cursor-pointer flex items-center justify-center gap-2 px-4 py-3 rounded-xl border font-black uppercase text-[10px] tracking-widest transition-all ${
+                        isUploading ? 'bg-neutral-800 border-neutral-700 text-neutral-500' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20'
+                      }`}>
+                        {isUploading ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Upload className="w-4 h-4" />
+                        )}
+                        <span>{isUploading ? 'Uploading...' : 'Direct Gallery Photo'}</span>
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          className="hidden" 
+                          onChange={handleImageUpload} 
+                          disabled={isUploading}
+                        />
+                      </label>
+
+                      {/* URL Field */}
+                      <input 
+                        type="url"
+                        value={imageUrl}
+                        onChange={e => setImageUrl(e.target.value)}
+                        placeholder="Or paste direct image URL..."
+                        className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-white font-mono"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="flex justify-end space-x-3 pt-4">

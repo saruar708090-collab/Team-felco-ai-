@@ -70,6 +70,9 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderDraft, navigate
         paymentTrxId,
         paymentScreenshotUrl: screenshotUrl,
         orderStatus: 'PENDING',
+        couponCode: orderDraft.couponCode,
+        discountAmount: orderDraft.discountAmount,
+        finalAmount: orderDraft.finalAmount,
         createdAt: new Date().toISOString()
       };
 
@@ -249,6 +252,16 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderDraft, navigate
                 <div className="flex justify-between">
                   <span className="text-neutral-400">TRX ID:</span>
                   <span className="font-bold font-mono text-emerald-400">{paymentTrxId}</span>
+                </div>
+                {orderDraft.couponCode && (
+                  <div className="flex justify-between border-t border-neutral-900 pt-2 text-emerald-400">
+                    <span>Coupon Applied:</span>
+                    <span className="font-bold">{orderDraft.couponCode} (-BDT {orderDraft.discountAmount})</span>
+                  </div>
+                )}
+                <div className="flex justify-between border-t border-neutral-900 pt-2 font-black text-white">
+                  <span>Final Payment:</span>
+                  <span>BDT {orderDraft.finalAmount || orderDraft.productPrice}</span>
                 </div>
               </div>
 

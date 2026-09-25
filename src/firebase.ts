@@ -5,12 +5,21 @@
 
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeFirestore } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
 const dbId = (firebaseConfig as any).firestoreDatabaseId;
-export const db = getFirestore(app, dbId && dbId !== '(default)' ? dbId : undefined);
+
+// Use initializeFirestore with experimentalForceLongPolling enabled.
+// This forces Firestore to use standard HTTPS long-polling instead of WebSockets,
+// which prevents connection timeouts and bypasses ISP/carrier blocks on mobile networks in Bangladesh.
+export const db = initializeFirestore(
+  app,
+  { experimentalForceLongPolling: true },
+  dbId && dbId !== '(default)' ? dbId : undefined
+);
+
 export const auth = getAuth(app);
 
 export enum OperationType {

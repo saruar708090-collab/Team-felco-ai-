@@ -30,6 +30,57 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({ orderDraft, setOrd
   });
   const [copied, setCopied] = useState(false);
 
+  // Coupon States
+  const [couponInput, setCouponInput] = useState('');
+  const [couponError, setCouponError] = useState('');
+  const [couponSuccess, setCouponSuccess] = useState('');
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [finalAmount, setFinalAmount] = useState(orderDraft.productPrice || 0);
+
+  const handleApplyCoupon = async () => {
+    setCouponError('');
+    setCouponSuccess('');
+    setDiscountAmount(0);
+    setFinalAmount(orderDraft.productPrice || 0);
+
+    const code = couponInput.trim().toUpperCase();
+    if (!code) {
+      setCouponError('Please enter a coupon code.');
+      return;
+    }
+
+    try {
+      const docSnap = await getDoc(doc(db, 'coupons', code));
+      if (docSnap.exists()) {
+        const couponData = docSnap.data();
+        if (couponData.active) {
+          const originalPrice = orderDraft.productPrice || 0;
+          let calculatedDiscount = 0;
+
+          if (couponData.discountType === 'percentage') {
+            calculatedDiscount = Math.round((originalPrice * couponData.discountValue) / 100);
+          } else {
+            calculatedDiscount = couponData.discountValue;
+          }
+
+          if (calculatedDiscount > originalPrice) {
+            calculatedDiscount = originalPrice;
+          }
+
+          setDiscountAmount(calculatedDiscount);
+          setFinalAmount(originalPrice - calculatedDiscount);
+          setCouponSuccess(`Coupon applied successfully! BDT ${calculatedDiscount} discount.`);
+        } else {
+          setCouponError('This coupon code has expired or is inactive.');
+        }
+      } else {
+        setCouponError('Invalid coupon code. Please try again.');
+      }
+    } catch (err) {
+      setCouponError('Failed to apply coupon. Try again.');
+    }
+  };
+
   useEffect(() => {
     fetchSettings();
   }, []);
@@ -92,7 +143,10 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({ orderDraft, setOrd
       bkashNumber: settings.bkashNumber,
       nagadNumber: settings.nagadNumber,
       rocketNumber: settings.rocketNumber,
-      paymentInstructions: settings.paymentInstructions
+      paymentInstructions: settings.paymentInstructions,
+      couponCode: couponSuccess ? couponInput.toUpperCase().trim() : undefined,
+      discountAmount: discountAmount,
+      finalAmount: finalAmount
     }));
     navigate('/order/details');
   };
@@ -117,15 +171,60 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({ orderDraft, setOrd
         </div>
 
         {/* Order Summary Box */}
-        <div className="bg-neutral-900/90 border border-neutral-800 rounded-xl p-4 flex items-center justify-between shadow-lg">
-          <div>
-            <span className="text-[10px] uppercase font-bold tracking-widest text-neutral-500 block">Product / Game</span>
-            <span className="text-xs sm:text-sm font-black uppercase text-white">{orderDraft.productName} ({orderDraft.selectedGame})</span>
+        <div className="bg-neutral-900/90 border border-neutral-800 rounded-2xl p-5 space-y-4 shadow-lg">
+          <div className="flex items-center justify-between pb-3 border-b border-neutral-800">
+            <div>
+              <span className="text-[9px] uppercase font-black tracking-widest text-neutral-400 block">Product / Game</span>
+              <span className="text-sm font-black uppercase text-white">{orderDraft.productName} ({orderDraft.selectedGame})</span>
+            </div>
+            <div className="text-right">
+              <span className="text-[9px] uppercase font-black tracking-widest text-neutral-400 block">Original Price</span>
+              <span className="text-sm font-black text-neutral-300">BDT {orderDraft.productPrice}</span>
+            </div>
           </div>
-          <div className="text-right">
-            <span className="text-[10px] uppercase font-bold tracking-widest text-neutral-500 block">Amount</span>
-            <span className="text-sm font-black text-emerald-400">BDT {orderDraft.productPrice}</span>
+
+          {/* Discount details if coupon applied */}
+          {discountAmount > 0 && (
+            <div className="flex items-center justify-between text-xs font-bold text-neutral-400">
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                Discount Applied:
+              </span>
+              <span className="text-red-400">- BDT {discountAmount}</span>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between pt-2">
+            <span className="text-xs uppercase font-black tracking-widest text-neutral-200">Total Payable Amount</span>
+            <span className="text-base font-black text-emerald-400">BDT {finalAmount}</span>
           </div>
+        </div>
+
+        {/* Coupon Input Box */}
+        <div className="bg-neutral-950/50 border border-neutral-900 rounded-2xl p-4 space-y-2.5 shadow-md">
+          <label className="text-[10px] uppercase font-black tracking-widest text-emerald-400 block">Apply Coupon Code (কোপন কোড ডিসকাউন্ট)</label>
+          <div className="flex gap-2">
+            <input 
+              type="text"
+              value={couponInput}
+              onChange={e => setCouponInput(e.target.value.toUpperCase())}
+              placeholder="ENTER CODE (e.g. FELCO50)"
+              className="flex-1 bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500 uppercase font-mono tracking-wider font-bold"
+            />
+            <button
+              onClick={handleApplyCoupon}
+              className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase text-[10px] tracking-widest rounded-xl transition-all shadow-md shrink-0"
+            >
+              Apply
+            </button>
+          </div>
+
+          {couponError && (
+            <p className="text-[10px] font-bold text-red-400 mt-1 uppercase tracking-wider">{couponError}</p>
+          )}
+          {couponSuccess && (
+            <p className="text-[10px] font-bold text-emerald-400 mt-1 uppercase tracking-wider">{couponSuccess}</p>
+          )}
         </div>
 
         <div>

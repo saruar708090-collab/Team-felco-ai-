@@ -81,6 +81,21 @@ Provide helpful, professional, polite, and concise black-and-white store assista
       appType: 'spa'
     });
     app.use(vite.middlewares);
+
+    // Fallback all non-API paths to serve index.html via Vite transform
+    app.get('*', async (req, res, next) => {
+      if (req.path.startsWith('/api')) {
+        return next();
+      }
+      try {
+        const fs = await import('fs');
+        let html = fs.readFileSync(path.resolve(__dirname, 'index.html'), 'utf-8');
+        html = await vite.transformIndexHtml(req.url, html);
+        res.status(200).set({ 'Content-Type': 'text/html' }).end(html);
+      } catch (e) {
+        next(e);
+      }
+    });
   }
 
   const PORT = Number(process.env.PORT) || 3000;

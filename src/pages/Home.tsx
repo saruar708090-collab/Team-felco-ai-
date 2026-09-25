@@ -74,7 +74,8 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
       ...prev,
       productId: product.id,
       productName: product.name,
-      productPrice: product.price
+      productPrice: product.price,
+      productCategory: product.category
     }));
     navigate('/order/game');
   };

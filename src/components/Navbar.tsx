@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, X, Headphones, Sun, Moon } from 'lucide-react';
+import { Menu, X, Headphones, Sun, Moon, Shield } from 'lucide-react';
 
 interface NavbarProps {
   currentRoute: string;
@@ -72,6 +72,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4 text-blue-400" />}
           </button>
+
+
 
           <div className="h-4 w-[1px] bg-neutral-800"></div>
 
@@ -160,6 +162,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             <Headphones className="w-4 h-4 text-emerald-400" />
             Customer Service Chat
           </button>
+
+
         </div>
       )}
     </header>
