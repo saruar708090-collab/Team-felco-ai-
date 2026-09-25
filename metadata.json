@@ -1,0 +1,6 @@
+{
+  "name": "TEAM FELCO STORE",
+  "description": "Official Team Felco Store - Premium Tools & Services",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

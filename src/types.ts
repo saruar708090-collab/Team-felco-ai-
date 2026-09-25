@@ -1,0 +1,58 @@
+export interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  imageUrl: string;
+  category?: string;
+  active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Order {
+  id?: string;
+  orderId: string;
+  productId: string;
+  productName: string;
+  selectedGame: string;
+  customerName: string;
+  telegramId: string;
+  whatsappNumber: string;
+  paymentMethod: string;
+  paymentTrxId: string;
+  paymentScreenshotUrl: string;
+  orderStatus: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'CANCELLED';
+  createdAt: any;
+  updatedAt?: any;
+}
+
+export interface StoreSettings {
+  storeName: string;
+  supportWhatsApp: string;
+  supportTelegram: string;
+  supportText: string;
+  businessHours: string;
+  bkashNumber: string;
+  nagadNumber: string;
+  rocketNumber: string;
+  paymentInstructions: string;
+  scrollingNotice?: string;
+}
+
+export interface OrderDraft {
+  productId?: string;
+  productName?: string;
+  productPrice?: number;
+  selectedGame?: string;
+  paymentMethod?: string;
+  bkashNumber?: string;
+  nagadNumber?: string;
+  rocketNumber?: string;
+  paymentInstructions?: string;
+  customerName?: string;
+  telegramId?: string;
+  whatsappNumber?: string;
+  paymentTrxId?: string;
+  paymentScreenshotUrl?: string;
+}

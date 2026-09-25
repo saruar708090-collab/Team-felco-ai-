@@ -1,0 +1,39 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: checks if user is authenticated and registered in the admins collection
+    function isAdmin() {
+      return request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // PRODUCTS: Public read (viewing products). Only authenticated admins can write/edit.
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // SETTINGS: Public read (payment/support configurations). Only authenticated admins can write/edit.
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ORDERS: Public create (customers placing orders). Only authenticated admins can read, update, or delete.
+    match /orders/{orderId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ADMINS: Admins can manage admins. Authenticated users can write/edit their own admin document during authentication.
+    match /admins/{adminId} {
+      allow read, write: if request.auth != null && request.auth.uid == adminId;
+      allow read, write: if isAdmin();
+    }
+  }
+}

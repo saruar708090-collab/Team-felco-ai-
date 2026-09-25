@@ -1,0 +1,86 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "Store products like Colour Trading Tool and Aviator Tool",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "maxLength": 100 },
+        "description": { "type": "string", "maxLength": 500 },
+        "price": { "type": "number" },
+        "imageUrl": { "type": "string", "maxLength": 500 },
+        "active": { "type": "boolean" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "name", "price", "active"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer purchase orders",
+      "type": "object",
+      "properties": {
+        "orderId": { "type": "string", "maxLength": 50 },
+        "productId": { "type": "string" },
+        "productName": { "type": "string" },
+        "selectedGame": { "type": "string" },
+        "customerName": { "type": "string", "maxLength": 100 },
+        "telegramId": { "type": "string", "maxLength": 100 },
+        "whatsappNumber": { "type": "string", "maxLength": 50 },
+        "paymentMethod": { "type": "string" },
+        "paymentTrxId": { "type": "string", "maxLength": 100 },
+        "paymentScreenshotUrl": { "type": "string", "maxLength": 1000 },
+        "orderStatus": { "type": "string", "enum": ["PENDING", "PROCESSING", "COMPLETED", "CANCELLED"] },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["orderId", "productId", "productName", "selectedGame", "customerName", "telegramId", "whatsappNumber", "paymentMethod", "paymentTrxId", "orderStatus"]
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "Store settings, payment info, and customer service details",
+      "type": "object",
+      "properties": {
+        "storeName": { "type": "string" },
+        "supportWhatsApp": { "type": "string" },
+        "supportTelegram": { "type": "string" },
+        "supportText": { "type": "string" },
+        "businessHours": { "type": "string" },
+        "bkashNumber": { "type": "string" },
+        "nagadNumber": { "type": "string" },
+        "rocketNumber": { "type": "string" },
+        "paymentInstructions": { "type": "string" },
+        "scrollingNotice": { "type": "string", "maxLength": 500 }
+      }
+    },
+    "Admin": {
+      "title": "Admin",
+      "description": "Authorized admin users",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "role": { "type": "string" }
+      },
+      "required": ["email"]
+    }
+  },
+  "firestore": {
+    "/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Store products collection"
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "Customer orders collection"
+    },
+    "/settings/{settingId}": {
+      "schema": { "$ref": "#/entities/Settings" },
+      "description": "Global store settings"
+    },
+    "/admins/{adminId}": {
+      "schema": { "$ref": "#/entities/Admin" },
+      "description": "Admin authorization collection"
+    }
+  }
+}
