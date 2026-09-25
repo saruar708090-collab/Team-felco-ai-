@@ -28,18 +28,42 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderDraft, navigate
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        setError('Screenshot image file must be less than 2MB.');
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setScreenshotUrl(reader.result as string);
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const max_size = 600; // Optimal for high quality + tiny file size
+
+        if (width > height) {
+          if (width > max_size) {
+            height *= max_size / width;
+            width = max_size;
+          }
+        } else {
+          if (height > max_size) {
+            width *= max_size / height;
+            height = max_size;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        // Convert to high-quality JPEG with 0.7 compression to guarantee under 50KB size
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+        setScreenshotUrl(compressedDataUrl);
         setError('');
       };
-      reader.readAsDataURL(file);
-    }
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleValidateAndPreview = (e: React.FormEvent) => {
@@ -81,10 +105,11 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderDraft, navigate
       setCompletedOrder(newOrder);
       navigate('/order/success');
     } catch (err: any) {
-      handleFirestoreError(err, OperationType.CREATE, `orders/${orderDraft.productId}`);
+      console.error('Order submission error details:', err);
+      setError(err.message || 'Failed to submit order. Please try again.');
+      setShowConfirmModal(false);
     } finally {
       setSubmitting(false);
-      setShowConfirmModal(false);
     }
   };
 

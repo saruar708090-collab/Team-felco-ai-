@@ -24,10 +24,10 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // ORDERS: Public create (customers placing orders). Only authenticated admins can read, update, or delete.
+    // ORDERS: Public read & create (customers placing & tracking orders). Only authenticated admins can update or delete.
     match /orders/{orderId} {
-      allow create: if true;
-      allow read, update, delete: if isAdmin();
+      allow read, create: if true;
+      allow update, delete: if isAdmin();
     }
 
     // ADMINS: Admins can manage admins. Authenticated users can write/edit their own admin document during authentication.
