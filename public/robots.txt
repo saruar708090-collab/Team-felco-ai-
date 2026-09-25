@@ -3,4 +3,4 @@ Allow: /
 Disallow: /tf-admin-secure-portal
 Disallow: /admin/*
 
-Sitemap: https://ais-pre-ihkeg32mksjhzuwaguhwls-389186586145.asia-east1.run.app/sitemap.xml
+Sitemap: https://teamfelco.netlify.app/sitemap.xml
