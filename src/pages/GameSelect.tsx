@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { OrderDraft } from '../types';
 import { ArrowRight, ArrowLeft, Check } from 'lucide-react';
+import { useSEO } from '../hooks/useSEO';
 
 interface GameSelectProps {
   orderDraft: OrderDraft;
@@ -9,6 +10,11 @@ interface GameSelectProps {
 }
 
 export const GameSelect: React.FC<GameSelectProps> = ({ orderDraft, setOrderDraft, navigate }) => {
+  useSEO({
+    title: `Select Game for ${orderDraft.productName || 'Hack'}`,
+    description: 'Select your preferred game server to configure the automated calculation bot and forecasting algorithms.'
+  });
+
   if (!orderDraft.productId) {
     useEffect(() => { navigate('/'); }, []);
     return null;

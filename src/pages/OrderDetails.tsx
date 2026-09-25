@@ -3,6 +3,7 @@ import { OrderDraft, Order } from '../types';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { ArrowRight, ArrowLeft, Upload, CheckCircle2, AlertCircle } from 'lucide-react';
+import { useSEO } from '../hooks/useSEO';
 
 interface OrderDetailsProps {
   orderDraft: OrderDraft;
@@ -11,6 +12,11 @@ interface OrderDetailsProps {
 }
 
 export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderDraft, navigate, setCompletedOrder }) => {
+  useSEO({
+    title: `Submit Proof for ${orderDraft.productName || 'Hack'}`,
+    description: 'Submit your transaction ID (TRX ID) and payment proof screenshot to verify and activate your VIP game hack code immediately.'
+  });
+
   if (!orderDraft.productId || !orderDraft.paymentMethod) {
     useEffect(() => { navigate('/'); }, []);
     return null;

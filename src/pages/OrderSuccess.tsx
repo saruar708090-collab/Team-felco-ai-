@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Order } from '../types';
 import { CheckCircle2, ShieldCheck, ArrowRight, Home, Headphones } from 'lucide-react';
+import { useSEO } from '../hooks/useSEO';
 
 interface OrderSuccessProps {
   completedOrder: Order | null;
@@ -9,6 +10,11 @@ interface OrderSuccessProps {
 }
 
 export const OrderSuccess: React.FC<OrderSuccessProps> = ({ completedOrder, navigate, onOpenCustomerService }) => {
+  useSEO({
+    title: completedOrder ? `Order Successful - ${completedOrder.orderId}` : 'Order Successful',
+    description: 'Congratulations! Your order proof has been successfully received. Copy your order ID to track activation status.'
+  });
+
   if (!completedOrder) {
     useEffect(() => { navigate('/'); }, []);
     return null;

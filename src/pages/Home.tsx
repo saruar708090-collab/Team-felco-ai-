@@ -4,6 +4,7 @@ import { db } from '../firebase';
 import { collection, getDocs } from 'firebase/firestore';
 import { ArrowRight, Search, ShieldCheck, Star, MessageSquare, Gamepad2, X } from 'lucide-react';
 import { ProductReviewsModal } from '../components/ProductReviewsModal';
+import { useSEO } from '../hooks/useSEO';
 
 interface HomeProps {
   navigate: (route: string) => void;
@@ -12,14 +13,28 @@ interface HomeProps {
   onOpenOrderTracker: () => void;
   theme?: 'dark' | 'light';
   settings?: any;
+  setGlobalLoading?: (loading: boolean) => void;
 }
 
-export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrderTracker, theme = 'dark', settings }) => {
+export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrderTracker, theme = 'dark', settings, setGlobalLoading }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [viewingProductDetails, setViewingProductDetails] = useState<Product | null>(null);
+
+  // Dynamic SEO tag management based on currently viewed product details
+  useSEO({
+    title: viewingProductDetails 
+      ? viewingProductDetails.name 
+      : 'Team Felco Store - Premium Colour Trading & Game Hacks',
+    description: viewingProductDetails 
+      ? viewingProductDetails.description 
+      : 'Get premium VIP colour trading predictions, auto-calculators, game prediction algorithms and tutorial guides directly from Team Felco.',
+    ogType: viewingProductDetails ? 'product' : 'website',
+    imageUrl: viewingProductDetails?.imageUrl,
+    youtubeUrl: viewingProductDetails?.youtubeUrl
+  });
 
   const categories = ['All', 'HGNICE', 'DKWIN', 'BDWIN', '1X BET', 'CK444'];
 
@@ -49,6 +64,7 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
   }, []);
 
   const fetchProducts = async () => {
+    if (setGlobalLoading) setGlobalLoading(true);
     try {
       const querySnapshot = await getDocs(collection(db, 'products'));
       if (querySnapshot.empty) {
@@ -67,6 +83,7 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
       setProducts(defaultProducts);
     } finally {
       setLoading(false);
+      if (setGlobalLoading) setGlobalLoading(false);
     }
   };
 
@@ -338,6 +355,51 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
                     <p className={`text-xs mt-2 leading-relaxed whitespace-pre-line ${isLight ? 'text-neutral-800' : 'text-neutral-200'}`}>
                       {viewingProductDetails.detailedDescription}
                     </p>
+                  </div>
+                )}
+
+                {/* Embedded YouTube video block */}
+                {viewingProductDetails.youtubeUrl && (
+                  <div className={`pt-4 border-t ${isLight ? 'border-slate-100' : 'border-neutral-800'} space-y-2`}>
+                    <h4 className="text-[10px] sm:text-xs uppercase font-extrabold tracking-widest text-[#ff0000] flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-red-600 inline-block animate-pulse" />
+                      <span>Video Tutorial & Hack Proof (ভিডিও প্রুফ / ব্যবহারের নিয়ম)</span>
+                    </h4>
+                    <div className="relative aspect-video rounded-xl overflow-hidden border border-neutral-800 bg-neutral-950 shadow-md">
+                      {(() => {
+                        // Extract video ID from any YouTube URL format (watch?v=, share, embed, etc.)
+                        let videoId = '';
+                        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+                        const match = viewingProductDetails.youtubeUrl.match(regExp);
+                        if (match && match[2].length === 11) {
+                          videoId = match[2];
+                        }
+                        
+                        if (videoId) {
+                          return (
+                            <iframe
+                              className="absolute top-0 left-0 w-full h-full"
+                              src={`https://www.youtube.com/embed/${videoId}`}
+                              title="YouTube video player"
+                              frameBorder="0"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                            ></iframe>
+                          );
+                        } else {
+                          return (
+                            <a
+                              href={viewingProductDetails.youtubeUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center bg-red-600/5 hover:bg-red-600/10 transition-colors"
+                            >
+                              <span className="text-xs font-bold text-red-500 uppercase tracking-wider underline">ইউটিউবে ভিডিও গাইডটি দেখতে এখানে ক্লিক করুন ↗</span>
+                            </a>
+                          );
+                        }
+                      })()}
+                    </div>
                   </div>
                 )}
               </div>

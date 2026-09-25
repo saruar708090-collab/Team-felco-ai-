@@ -21,6 +21,7 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [detailedDescription, setDetailedDescription] = useState('');
+  const [youtubeUrl, setYoutubeUrl] = useState('');
   const [price, setPrice] = useState('');
   const [originalPrice, setOriginalPrice] = useState('');
   const [imageUrl, setImageUrl] = useState('');
@@ -102,6 +103,7 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
     setName('');
     setDescription('');
     setDetailedDescription('');
+    setYoutubeUrl('');
     setPrice('');
     setOriginalPrice('');
     setImageUrl('');
@@ -116,6 +118,7 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
     setName(product.name);
     setDescription(product.description);
     setDetailedDescription(product.detailedDescription || '');
+    setYoutubeUrl(product.youtubeUrl || '');
     setPrice(product.price.toString());
     setOriginalPrice(product.originalPrice ? product.originalPrice.toString() : '');
     setImageUrl(product.imageUrl);
@@ -134,6 +137,7 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
         name,
         description,
         detailedDescription: detailedDescription || undefined,
+        youtubeUrl: youtubeUrl || undefined,
         price: parseFloat(price) || 0,
         originalPrice: originalPrice ? parseFloat(originalPrice) : undefined,
         imageUrl,
@@ -327,6 +331,18 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
                     placeholder="কাস্টমার প্রোডাক্টটিতে ক্লিক করলে যে বিস্তারিত টিউটোরিয়াল বা বিবরণ দেখতে পাবে তা এখানে লিখুন..."
                     className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-white resize-y transition-colors"
                   />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-[#ff0000] block mb-1">YouTube Tutorial / Proof Video Link (ইউটিউব প্রুফ বা টিউটোরিয়াল লিংক - Optional)</label>
+                  <input 
+                    type="url"
+                    value={youtubeUrl}
+                    onChange={e => setYoutubeUrl(e.target.value)}
+                    placeholder="e.g. https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-white transition-colors font-mono"
+                  />
+                  <p className="text-[10px] text-neutral-500 mt-1">এখানে ইউটিউব ভিডিওর লিংক দিলে কাস্টমার ডিটেইলস পপ-আপ উইন্ডোতে ভিডিও টিউটোরিয়াল দেখতে পারবে।</p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

@@ -28,6 +28,7 @@ export default function App() {
   const [isCustomerServiceOpen, setIsCustomerServiceOpen] = useState(false);
   const [isOrderTrackerOpen, setIsOrderTrackerOpen] = useState(false);
   const [settings, setSettings] = useState<StoreSettings | null>(null);
+  const [globalLoading, setGlobalLoading] = useState(true);
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(false);
   const [authChecking, setAuthChecking] = useState(true);
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -80,6 +81,7 @@ export default function App() {
   }, []);
 
   const fetchGlobalSettings = async () => {
+    setGlobalLoading(true);
     try {
       const docSnap = await getDoc(doc(db, 'settings', 'general'));
       if (docSnap.exists()) {
@@ -89,6 +91,8 @@ export default function App() {
       }
     } catch (err) {
       setSettings(defaultSettings);
+    } finally {
+      setGlobalLoading(false);
     }
   };
 
@@ -118,6 +122,7 @@ export default function App() {
             onOpenOrderTracker={() => setIsOrderTrackerOpen(true)}
             theme={theme}
             settings={settings}
+            setGlobalLoading={setGlobalLoading}
           />
         );
       case '/order/game':
@@ -151,6 +156,7 @@ export default function App() {
             onOpenOrderTracker={() => setIsOrderTrackerOpen(true)}
             theme={theme}
             settings={settings}
+            setGlobalLoading={setGlobalLoading}
           />
         );
     }
@@ -259,6 +265,27 @@ export default function App() {
             onClose={() => setIsOrderTrackerOpen(false)}
           />
         </>
+      )}
+
+      {/* Global loading spinner overlay */}
+      {globalLoading && (
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#050508] text-white select-none pointer-events-auto transition-opacity duration-150">
+          <div className="flex flex-col items-center space-y-4">
+            {/* Ultra-Fast Neon Equalizer Frequency Wave */}
+            <div className="flex items-end justify-center gap-1.5 h-10">
+              <div className="w-1.5 bg-emerald-500 rounded-full animate-bounce h-6 [animation-duration:0.4s]"></div>
+              <div className="w-1.5 bg-emerald-400 rounded-full animate-bounce h-9 [animation-duration:0.3s] shadow-[0_0_10px_rgba(52,211,153,0.7)]"></div>
+              <div className="w-1.5 bg-emerald-500 rounded-full animate-bounce h-5 [animation-duration:0.5s]"></div>
+              <div className="w-1.5 bg-emerald-400 rounded-full animate-bounce h-8 [animation-duration:0.35s] shadow-[0_0_10px_rgba(52,211,153,0.7)]"></div>
+              <div className="w-1.5 bg-emerald-500 rounded-full animate-bounce h-6 [animation-duration:0.45s]"></div>
+            </div>
+            
+            <div className="text-center space-y-1">
+              <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-400 drop-shadow-[0_0_6px_rgba(52,211,153,0.3)]">TEAM FELCO</h3>
+              <p className="text-[9px] text-neutral-500 font-bold uppercase tracking-wider">Loading...</p>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

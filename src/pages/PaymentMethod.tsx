@@ -3,6 +3,7 @@ import { OrderDraft, StoreSettings } from '../types';
 import { db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { ArrowRight, ArrowLeft, Check, Copy, CheckCircle } from 'lucide-react';
+import { useSEO } from '../hooks/useSEO';
 
 interface PaymentMethodProps {
   orderDraft: OrderDraft;
@@ -11,6 +12,11 @@ interface PaymentMethodProps {
 }
 
 export const PaymentMethod: React.FC<PaymentMethodProps> = ({ orderDraft, setOrderDraft, navigate }) => {
+  useSEO({
+    title: `Payment for ${orderDraft.productName || 'Hack'}`,
+    description: 'Secure your VIP Hack tool activation by selecting bKash, Rocket, or Nagad automatic deposit channels.'
+  });
+
   if (!orderDraft.productId || !orderDraft.selectedGame) {
     useEffect(() => { navigate('/order/game'); }, []);
     return null;
