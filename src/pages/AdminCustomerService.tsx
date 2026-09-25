@@ -79,23 +79,23 @@ export const AdminCustomerService: React.FC<AdminCustomerServiceProps> = ({ curr
           <form onSubmit={handleSave} className="bg-neutral-950 border border-neutral-900 rounded-2xl p-6 sm:p-8 space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-2">WhatsApp Support Number</label>
+                <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-2">WhatsApp Support Number (Optional)</label>
                 <input 
                   type="text"
-                  value={settings.supportWhatsApp}
+                  value={settings.supportWhatsApp || ''}
                   onChange={e => setSettings({ ...settings, supportWhatsApp: e.target.value })}
-                  required
+                  placeholder="e.g. +8801..."
                   className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-white"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-2">Telegram Username / Channel</label>
+                <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-2">Telegram Username / Channel (Optional)</label>
                 <input 
                   type="text"
-                  value={settings.supportTelegram}
+                  value={settings.supportTelegram || ''}
                   onChange={e => setSettings({ ...settings, supportTelegram: e.target.value })}
-                  required
+                  placeholder="e.g. @TeamFelcoSupport"
                   className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-white"
                 />
               </div>
@@ -103,7 +103,7 @@ export const AdminCustomerService: React.FC<AdminCustomerServiceProps> = ({ curr
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-2">Facebook Page / Group URL (ফেসবুক লিংক)</label>
+                <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-2">Facebook Page / Group URL (ফেসবুক লিংক - Optional)</label>
                 <input 
                   type="url"
                   value={settings.facebookUrl || ''}
@@ -114,7 +114,7 @@ export const AdminCustomerService: React.FC<AdminCustomerServiceProps> = ({ curr
               </div>
 
               <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-2">YouTube Channel / Video URL (ইউটিউব লিংক)</label>
+                <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-2">YouTube Channel / Video URL (ইউটিউব লিংক - Optional)</label>
                 <input 
                   type="url"
                   value={settings.youtubeUrl || ''}
@@ -126,23 +126,23 @@ export const AdminCustomerService: React.FC<AdminCustomerServiceProps> = ({ curr
             </div>
 
             <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-2">Support Banner Text</label>
+              <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-2">Support Banner Text (Optional)</label>
               <textarea 
-                value={settings.supportText}
+                value={settings.supportText || ''}
                 onChange={e => setSettings({ ...settings, supportText: e.target.value })}
                 rows={3}
-                required
+                placeholder="Support team active message..."
                 className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-white resize-none"
               />
             </div>
 
             <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-2">Business Hours</label>
+              <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-2">Business Hours (Optional)</label>
               <input 
                 type="text"
-                value={settings.businessHours}
+                value={settings.businessHours || ''}
                 onChange={e => setSettings({ ...settings, businessHours: e.target.value })}
-                required
+                placeholder="e.g. 24 Hours Active"
                 className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-white"
               />
             </div>

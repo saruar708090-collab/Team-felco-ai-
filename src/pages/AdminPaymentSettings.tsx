@@ -99,34 +99,34 @@ export const AdminPaymentSettings: React.FC<AdminPaymentSettingsProps> = ({ curr
           <form onSubmit={handleSave} className="bg-neutral-950 border border-neutral-900 rounded-2xl p-6 sm:p-8 space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-2">bKash Number</label>
+                <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-2">bKash Number (Optional)</label>
                 <input 
                   type="text"
-                  value={settings.bkashNumber}
+                  value={settings.bkashNumber || ''}
                   onChange={e => setSettings({ ...settings, bkashNumber: e.target.value })}
-                  required
+                  placeholder="e.g. 017..."
                   className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm font-mono text-white focus:outline-none focus:border-white"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-2">Nagad Number</label>
+                <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-2">Nagad Number (Optional)</label>
                 <input 
                   type="text"
-                  value={settings.nagadNumber}
+                  value={settings.nagadNumber || ''}
                   onChange={e => setSettings({ ...settings, nagadNumber: e.target.value })}
-                  required
+                  placeholder="e.g. 018..."
                   className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm font-mono text-white focus:outline-none focus:border-white"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-2">Rocket Number</label>
+                <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-2">Rocket Number (Optional)</label>
                 <input 
                   type="text"
-                  value={settings.rocketNumber}
+                  value={settings.rocketNumber || ''}
                   onChange={e => setSettings({ ...settings, rocketNumber: e.target.value })}
-                  required
+                  placeholder="e.g. 019..."
                   className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm font-mono text-white focus:outline-none focus:border-white"
                 />
               </div>

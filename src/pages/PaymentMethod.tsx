@@ -95,7 +95,18 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({ orderDraft, setOrd
     try {
       const docSnap = await getDoc(doc(db, 'settings', 'general'));
       if (docSnap.exists()) {
-        setSettings(docSnap.data() as StoreSettings);
+        const data = docSnap.data() as StoreSettings;
+        setSettings(data);
+        
+        // Dynamically select the first available payment method that has a number configured
+        const available: string[] = [];
+        if (data.bkashNumber && data.bkashNumber.trim()) available.push('bKash');
+        if (data.nagadNumber && data.nagadNumber.trim()) available.push('Nagad');
+        if (data.rocketNumber && data.rocketNumber.trim()) available.push('Rocket');
+        
+        if (available.length > 0) {
+          setPaymentMethod(available[0]);
+        }
       }
     } catch (err) {
       // Use defaults
@@ -106,7 +117,7 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({ orderDraft, setOrd
     { 
       id: 'bKash', 
       label: 'bKash', 
-      number: settings.bkashNumber || '01613562615',
+      number: settings.bkashNumber,
       bg: 'bg-pink-600',
       textColor: 'text-white',
       badgeText: 'bKash'
@@ -114,7 +125,7 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({ orderDraft, setOrd
     { 
       id: 'Nagad', 
       label: 'Nagad', 
-      number: settings.nagadNumber || '01613562615',
+      number: settings.nagadNumber,
       bg: 'bg-orange-600',
       textColor: 'text-white',
       badgeText: 'NAGAD'
@@ -122,18 +133,18 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({ orderDraft, setOrd
     { 
       id: 'Rocket', 
       label: 'Rocket', 
-      number: settings.rocketNumber || '01613562615',
+      number: settings.rocketNumber,
       bg: 'bg-purple-700',
       textColor: 'text-white',
       badgeText: 'ROCKET'
     }
-  ];
+  ].filter(m => m.number && m.number.trim() !== '');
 
   const getNumberForMethod = (method: string) => {
-    if (method === 'bKash') return settings.bkashNumber || '01613562615';
-    if (method === 'Nagad') return settings.nagadNumber || '01613562615';
-    if (method === 'Rocket') return settings.rocketNumber || '01613562615';
-    return '01613562615';
+    if (method === 'bKash') return settings.bkashNumber || '';
+    if (method === 'Nagad') return settings.nagadNumber || '';
+    if (method === 'Rocket') return settings.rocketNumber || '';
+    return '';
   };
 
   const handleCopyNumber = (num: string) => {

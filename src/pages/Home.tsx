@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Product, OrderDraft } from '../types';
 import { db } from '../firebase';
 import { collection, getDocs } from 'firebase/firestore';
-import { ArrowRight, Search, ShieldCheck, Star, MessageSquare, Gamepad2, X } from 'lucide-react';
+import { ArrowRight, Search, ShieldCheck, Star, MessageSquare, Gamepad2, X, Zap, Sparkles } from 'lucide-react';
 import { ProductReviewsModal } from '../components/ProductReviewsModal';
 import { useSEO } from '../hooks/useSEO';
 
@@ -176,9 +176,9 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
 
         {/* Products Grid */}
         {loading ? (
-          <div className="grid grid-cols-2 gap-3 sm:gap-6">
-            {[1, 2].map(i => (
-              <div key={i} className={`rounded-xl sm:rounded-2xl h-64 sm:h-96 animate-pulse ${isLight ? 'bg-slate-200' : 'bg-neutral-900/60 border border-neutral-800'}`} />
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className={`rounded-xl h-56 sm:h-72 animate-pulse ${isLight ? 'bg-slate-200' : 'bg-neutral-900/60 border border-neutral-800'}`} />
             ))}
           </div>
         ) : filteredProducts.length === 0 ? (
@@ -186,92 +186,122 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
             <p className="text-xs font-bold uppercase tracking-wider">No tools available for '{selectedCategory}'.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:gap-6">
-            {filteredProducts.map(product => (
-              <div 
-                key={product.id}
-                className={`group border transition-all duration-300 rounded-xl sm:rounded-2xl overflow-hidden flex flex-col justify-between shadow-xl backdrop-blur-sm ${
-                  isLight 
-                    ? 'bg-white border-slate-200 hover:border-emerald-500 shadow-slate-200/50' 
-                    : 'bg-neutral-900/80 border-neutral-800 hover:border-neutral-500'
-                }`}
-              >
-                <div onClick={() => setViewingProductDetails(product)} className="cursor-pointer group/card flex-1 flex flex-col justify-start" title="প্রোডাক্টের বিস্তারিত দেখতে এখানে চাপুন">
-                  <div className={`relative h-32 sm:h-52 overflow-hidden ${isLight ? 'bg-slate-100' : 'bg-neutral-950'}`}>
-                    {product.soldOut && (
-                      <div className="absolute inset-0 bg-black/75 backdrop-blur-[1px] flex items-center justify-center z-10">
-                        <span className="bg-red-600 text-white font-black text-[10px] sm:text-xs uppercase tracking-widest px-3 py-1.5 rounded-lg shadow-lg border border-red-500 animate-pulse">
-                          SOLD OUT
-                        </span>
-                      </div>
-                    )}
-                    <img 
-                      src={product.imageUrl || 'https://images.unsplash.com/photo-1642543492481-44e81e3914a7?w=800&auto=format&fit=crop&q=60'} 
-                      alt={product.name}
-                      className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${product.soldOut ? 'opacity-50 grayscale' : ''}`}
-                    />
-                    <div className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-black/85 backdrop-blur-md border border-neutral-800 px-2.5 py-1 sm:py-1.5 rounded-lg text-[9px] sm:text-xs font-black tracking-wider text-emerald-400 flex flex-col items-end gap-0.5">
-                      {product.originalPrice && product.originalPrice > product.price && (
-                        <span className="text-[7px] sm:text-[9px] line-through text-red-500 font-extrabold block">
-                          BDT {product.originalPrice}
-                        </span>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
+            {filteredProducts.map(product => {
+              const hasDiscount = product.originalPrice && product.originalPrice > product.price;
+              const discountPercent = hasDiscount 
+                ? Math.round(((product.originalPrice! - product.price) / product.originalPrice!) * 100) 
+                : 0;
+
+              return (
+                <div 
+                  key={product.id}
+                  className={`group border rounded-2xl overflow-hidden flex flex-col justify-between transition-all duration-300 relative ${
+                    isLight 
+                      ? 'bg-white border-slate-200 shadow-sm hover:shadow-md hover:border-emerald-400' 
+                      : 'bg-[#121214] border-neutral-800/80 shadow-md hover:border-emerald-500/50 hover:shadow-emerald-500/5'
+                  }`}
+                >
+                  <div 
+                    onClick={() => setViewingProductDetails(product)} 
+                    className="cursor-pointer group/card flex-1 flex flex-col" 
+                    title="বিস্তারিত দেখতে ক্লিক করুন"
+                  >
+                    {/* Compact Image Container with Floating Badges (Original Premium Layout) */}
+                    <div className={`relative aspect-square w-full overflow-hidden ${isLight ? 'bg-slate-100' : 'bg-neutral-950'}`}>
+                      {product.soldOut && (
+                        <div className="absolute inset-0 bg-black/80 backdrop-blur-[2px] flex items-center justify-center z-20">
+                          <span className="bg-red-600 text-white font-black text-[10px] uppercase tracking-wider px-2 py-0.5 rounded shadow">
+                            SOLD OUT
+                          </span>
+                        </div>
                       )}
-                      <span>BDT {product.price}</span>
-                    </div>
+                      
+                      <img 
+                        src={product.imageUrl || 'https://images.unsplash.com/photo-1642543492481-44e81e3914a7?w=800&auto=format&fit=crop&q=60'} 
+                        alt={product.name}
+                        className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${product.soldOut ? 'opacity-30 grayscale' : ''}`}
+                      />
 
-                    {product.originalPrice && product.originalPrice > product.price && !product.soldOut && (
-                      <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 bg-rose-600 text-white text-[8px] sm:text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider animate-bounce">
-                        SAVE {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
+                      {/* Floating Price Badge (Top-Right) */}
+                      <div className="absolute top-2 right-2 bg-black/85 backdrop-blur-md px-2 py-1 rounded-lg border border-neutral-700/60 shadow-lg text-right z-10">
+                        {hasDiscount && (
+                          <div className="text-[9px] font-bold text-red-400 line-through leading-tight">
+                            BDT {product.originalPrice}
+                          </div>
+                        )}
+                        <div className="text-xs sm:text-sm font-black text-emerald-400 tracking-tight leading-tight">
+                          BDT {product.price}
+                        </div>
                       </div>
-                    )}
-                  </div>
 
-                  <div className="p-3 sm:p-5 space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                        {product.category || 'HGNICE'}
-                      </span>
+                      {/* Floating Discount Badge (Bottom-Left) */}
+                      {hasDiscount && !product.soldOut && (
+                        <div className="absolute bottom-2 left-2 bg-gradient-to-r from-rose-600 to-red-600 text-white text-[9px] sm:text-[10px] font-black px-2 py-0.5 rounded-md shadow-md z-10 uppercase tracking-wide">
+                          SAVE {discountPercent}%
+                        </div>
+                      )}
                     </div>
 
-                    <h3 className={`text-xs sm:text-lg font-black uppercase tracking-wide group-hover:text-emerald-500 transition-colors line-clamp-1 ${isLight ? 'text-neutral-900' : 'text-white'}`}>
-                      {product.name}
-                    </h3>
-                    <p className={`text-[10px] sm:text-xs leading-relaxed line-clamp-2 ${isLight ? 'text-neutral-600' : 'text-neutral-400'}`}>
-                      {product.description}
-                    </p>
+                    {/* Content Section */}
+                    <div className="p-2.5 sm:p-3 flex-1 flex flex-col justify-between gap-1.5">
+                      <div>
+                        {/* Category Badge */}
+                        <span className="inline-block text-[8px] sm:text-[9px] font-bold uppercase px-2 py-0.5 rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 mb-1">
+                          {product.category || 'COLOUR TRADING HACK'}
+                        </span>
+
+                        {/* Title */}
+                        <h3 className={`text-xs sm:text-sm font-black uppercase tracking-tight line-clamp-1 group-hover:text-emerald-400 transition-colors ${
+                          isLight ? 'text-neutral-900' : 'text-white'
+                        }`}>
+                          {product.name}
+                        </h3>
+
+                        {/* Summary / Description */}
+                        <p className={`text-[10px] line-clamp-2 mt-0.5 leading-relaxed ${
+                          isLight ? 'text-neutral-500' : 'text-neutral-400'
+                        }`}>
+                          {product.description}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions (Buy Now & Reviews) */}
+                  <div className="p-2.5 sm:p-3 pt-0 flex flex-col gap-1.5">
+                    <button 
+                      onClick={() => !product.soldOut && handleBuyNow(product)}
+                      disabled={product.soldOut}
+                      className={`w-full py-2 font-black uppercase text-[11px] sm:text-xs tracking-wider rounded-xl transition-all flex items-center justify-center gap-1 active:scale-[0.98] ${
+                        product.soldOut
+                          ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed'
+                          : isLight
+                            ? 'bg-neutral-900 text-white hover:bg-black shadow-sm'
+                            : 'bg-white text-black hover:bg-neutral-200 shadow-md'
+                      }`}
+                    >
+                      <span>{product.soldOut ? 'SOLD OUT' : 'BUY NOW'}</span>
+                      {!product.soldOut && <span className="text-xs">→</span>}
+                    </button>
+
+                    <button
+                      onClick={() => setSelectedProduct(product)}
+                      className={`w-full py-1.5 px-2 text-[10px] rounded-lg transition-all flex items-center justify-center gap-1.5 border group/rev active:scale-[0.98] ${
+                        isLight 
+                          ? 'bg-slate-50 border-slate-200 text-neutral-600 hover:bg-amber-50 hover:border-amber-300 hover:text-amber-800' 
+                          : 'bg-neutral-900/60 border-neutral-800/80 text-neutral-400 hover:bg-neutral-850 hover:border-amber-500/30 hover:text-neutral-200'
+                      }`}
+                    >
+                      <Star className="w-3 h-3 text-amber-400 fill-current shrink-0 group-hover/rev:scale-110 transition-transform" />
+                      <span className="font-bold text-amber-400">4.9</span>
+                      <span className="text-neutral-500 text-[9px]">•</span>
+                      <span className="font-medium tracking-wide">Customer Reviews</span>
+                    </button>
                   </div>
                 </div>
-
-                <div className="p-3 sm:p-5 pt-0 space-y-2">
-                  <button 
-                    onClick={() => !product.soldOut && handleBuyNow(product)}
-                    disabled={product.soldOut}
-                    className={`w-full py-2.5 sm:py-3 font-extrabold uppercase text-[10px] sm:text-xs tracking-widest rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-md group/btn ${
-                      product.soldOut
-                        ? 'bg-neutral-800 border border-neutral-700 text-neutral-500 cursor-not-allowed opacity-60'
-                        : isLight 
-                          ? 'bg-neutral-900 text-white hover:bg-neutral-800' 
-                          : 'bg-white text-black hover:bg-neutral-200'
-                    }`}
-                  >
-                    <span>{product.soldOut ? 'Sold Out' : 'Buy Now'}</span>
-                    {!product.soldOut && <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-0.5 transition-transform" />}
-                  </button>
-
-                  <button
-                    onClick={() => setSelectedProduct(product)}
-                    className={`w-full py-2 font-bold uppercase text-[9px] sm:text-[11px] tracking-wider rounded-xl transition-colors flex items-center justify-center gap-1.5 border ${
-                      isLight 
-                        ? 'bg-slate-50 border-slate-200 text-neutral-700 hover:bg-slate-100' 
-                        : 'bg-neutral-950 border-neutral-800 text-neutral-300 hover:bg-neutral-800'
-                    }`}
-                  >
-                    <Star className="w-3 h-3 text-amber-400 fill-current" />
-                    <span>Customer Reviews (4.9★)</span>
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -392,9 +422,19 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
                               href={viewingProductDetails.youtubeUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center bg-red-600/5 hover:bg-red-600/10 transition-colors"
+                              className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-neutral-900 via-neutral-950 to-black hover:from-neutral-850 hover:to-neutral-900 transition-all border border-red-500/10 group cursor-pointer"
                             >
-                              <span className="text-xs font-bold text-red-500 uppercase tracking-wider underline">ইউটিউবে ভিডিও গাইডটি দেখতে এখানে ক্লিক করুন ↗</span>
+                              {/* Giant Red Pulsating YouTube Logo Container */}
+                              <div className="relative mb-3.5 flex items-center justify-center">
+                                <div className="absolute inset-0 bg-red-600/25 rounded-full blur-2xl group-hover:bg-red-600/40 transition-all duration-300 w-20 h-20"></div>
+                                <svg viewBox="0 0 24 24" className="w-20 h-20 text-red-600 fill-current relative drop-shadow-2xl group-hover:scale-110 group-hover:text-red-500 transition-all duration-300">
+                                  <path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.107C19.522 3.543 12 3.543 12 3.543s-7.522 0-9.388.513a3.003 3.003 0 0 0-2.11 2.107C0 8.029 0 12 0 12s0 3.971.502 5.837a3.003 3.003 0 0 0 2.11 2.107C4.478 20.457 12 20.457 12 20.457s7.522 0 9.388-.513a3.003 3.003 0 0 0 2.11-2.107C24 15.971 24 12 24 12s0-3.971-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                </svg>
+                              </div>
+                              <span className="text-sm font-black text-white uppercase tracking-widest group-hover:text-red-500 transition-colors">WATCH VIDEO TUTORIAL</span>
+                              <span className="text-xs font-bold text-red-500 mt-1 flex items-center gap-1 group-hover:underline">
+                                ইউটিউবে ভিডিও গাইডটি দেখতে এখানে ক্লিক করুন ↗
+                              </span>
                             </a>
                           );
                         }
