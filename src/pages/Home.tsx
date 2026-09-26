@@ -142,21 +142,45 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
     <div className={`min-h-screen py-6 sm:py-10 transition-colors duration-300 ${isLight ? 'bg-slate-100 text-neutral-900' : 'bg-[#050505] text-white'}`}>
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 space-y-6">
         
-        {/* Scrolling Notice */}
+        {/* Professional Announcement Bar */}
         {settings?.scrollingNotice && (
-          <div className={`relative overflow-hidden py-3 border-y mb-4 ${
-            isLight ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-emerald-500/5 border-emerald-500/10 text-emerald-400'
+          <div className={`relative overflow-hidden rounded-xl border px-3 py-2.5 flex items-center gap-3 transition-colors ${
+            isLight
+              ? 'bg-white border-slate-200/90 shadow-sm'
+              : 'bg-neutral-900/90 border-neutral-800 shadow-md'
           }`}>
-            <div className="flex items-center gap-2 px-4 absolute left-0 z-10 h-full font-black text-[10px] uppercase tracking-tighter shadow-xl">
-              <span className="bg-emerald-500 text-black px-2 py-0.5 rounded">Notice</span>
+            {/* Left Minimal Status Tag */}
+            <div className={`flex items-center gap-2 pr-3 border-r shrink-0 z-10 ${
+              isLight ? 'border-slate-200 bg-white' : 'border-neutral-800 bg-neutral-900/95'
+            }`}>
+              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+              <span className={`text-[10px] sm:text-[11px] font-bold uppercase tracking-widest ${
+                isLight ? 'text-neutral-800' : 'text-neutral-200'
+              }`}>
+                Notice
+              </span>
             </div>
-            <div className="whitespace-nowrap animate-marquee flex items-center gap-4">
-              <span className="text-xs font-bold uppercase tracking-widest pl-24">
-                {settings.scrollingNotice}
-              </span>
-              <span className="text-xs font-bold uppercase tracking-widest">
-                {settings.scrollingNotice}
-              </span>
+
+            {/* Slow & Smooth Readable Ticker */}
+            <div className="flex-1 overflow-hidden relative">
+              <div className="animate-marquee items-center whitespace-nowrap">
+                {[0, 1].map((idx) => (
+                  <div key={idx} className="flex items-center">
+                    <span className={`text-xs font-medium tracking-wide px-6 ${
+                      isLight ? 'text-neutral-700' : 'text-neutral-300'
+                    }`}>
+                      {settings.scrollingNotice}
+                    </span>
+                    <span className="text-emerald-500/60 text-xs px-4">•</span>
+                    <span className={`text-xs font-medium tracking-wide px-6 ${
+                      isLight ? 'text-neutral-700' : 'text-neutral-300'
+                    }`}>
+                      {settings.scrollingNotice}
+                    </span>
+                    <span className="text-emerald-500/60 text-xs px-4">•</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}

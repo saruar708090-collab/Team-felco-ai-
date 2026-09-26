@@ -45,6 +45,9 @@ export interface StoreSettings {
   rocketNumber: string;
   paymentInstructions: string;
   scrollingNotice?: string;
+  popupNoticeActive?: boolean;
+  popupNoticeText?: string;
+  popupNoticeImage?: string;
   facebookUrl?: string;
   youtubeUrl?: string;
 }

@@ -18,7 +18,7 @@ import { AdminCoupons } from './pages/AdminCoupons';
 import { OrderDraft, Order, StoreSettings } from './types';
 import { db, auth } from './firebase';
 import { doc, getDoc } from 'firebase/firestore';
-import { Headphones } from 'lucide-react';
+import { Headphones, X } from 'lucide-react';
 import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
 
 export default function App() {
@@ -29,6 +29,7 @@ export default function App() {
   const [isOrderTrackerOpen, setIsOrderTrackerOpen] = useState(false);
   const [settings, setSettings] = useState<StoreSettings | null>(null);
   const [globalLoading, setGlobalLoading] = useState(true);
+  const [isPopupDismissed, setIsPopupDismissed] = useState(false);
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(false);
   const [authChecking, setAuthChecking] = useState(true);
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -118,6 +119,10 @@ export default function App() {
   };
 
   const navigate = (route: string) => {
+    if (currentRoute.startsWith('/admin') && route === '/') {
+      fetchGlobalSettings();
+      setIsPopupDismissed(false);
+    }
     window.history.pushState({}, '', route);
     setCurrentRoute(route);
     window.scrollTo(0, 0);
@@ -285,6 +290,55 @@ export default function App() {
             isOpen={isOrderTrackerOpen}
             onClose={() => setIsOrderTrackerOpen(false)}
           />
+
+          {/* Entry Popup Notice Modal (Optional Photo / Text, Instant Cross Close) */}
+          {!isSecretPortal && !globalLoading && !isPopupDismissed && settings?.popupNoticeActive && (settings?.popupNoticeImage || settings?.popupNoticeText) && (
+            <div
+              onClick={() => setIsPopupDismissed(true)}
+              className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn"
+            >
+              <div
+                onClick={e => e.stopPropagation()}
+                className={`relative w-full max-w-md rounded-2xl overflow-hidden border shadow-2xl transition-all ${
+                  theme === 'light'
+                    ? 'bg-white border-slate-200 text-neutral-900'
+                    : 'bg-[#111115] border-neutral-800 text-white'
+                }`}
+              >
+                {/* Instant No-Disturb Cross (X) Button */}
+                <button
+                  type="button"
+                  onClick={() => setIsPopupDismissed(true)}
+                  aria-label="Close notice"
+                  className="absolute top-3 right-3 z-20 w-8 h-8 rounded-full bg-black/75 hover:bg-black text-white border border-white/20 flex items-center justify-center shadow-lg transition-transform active:scale-90 hover:scale-105"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+
+                {/* Optional Gallery Photo */}
+                {settings.popupNoticeImage && (
+                  <div className="w-full bg-black flex items-center justify-center">
+                    <img
+                      src={settings.popupNoticeImage}
+                      alt="Notice"
+                      className="w-full max-h-[65vh] object-contain"
+                    />
+                  </div>
+                )}
+
+                {/* Optional Notice Text */}
+                {settings.popupNoticeText && (
+                  <div className={`p-5 sm:p-6 ${!settings.popupNoticeImage ? 'pt-10' : ''}`}>
+                    <p className={`text-xs sm:text-sm font-medium leading-relaxed whitespace-pre-line text-center ${
+                      theme === 'light' ? 'text-neutral-800' : 'text-neutral-200'
+                    }`}>
+                      {settings.popupNoticeText}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </>
       )}
 
