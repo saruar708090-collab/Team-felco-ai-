@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Product, OrderDraft } from '../types';
 import { db } from '../firebase';
 import { collection, getDocs } from 'firebase/firestore';
-import { ArrowRight, Search, ShieldCheck, Star, MessageSquare, Gamepad2, X, Zap, Sparkles } from 'lucide-react';
+import { ArrowRight, Search, ShieldCheck, Star, Gamepad2, X } from 'lucide-react';
 import { ProductReviewsModal } from '../components/ProductReviewsModal';
 import { useSEO } from '../hooks/useSEO';
 
@@ -64,11 +64,36 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
   }, []);
 
   const fetchProducts = async () => {
-    if (setGlobalLoading) setGlobalLoading(true);
+    let hasCached = false;
+    try {
+      const cached = localStorage.getItem('tf_cached_products');
+      if (cached) {
+        const parsed = JSON.parse(cached) as Product[];
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setProducts(parsed);
+          setLoading(false);
+          if (setGlobalLoading) setGlobalLoading(false);
+          hasCached = true;
+        }
+      }
+    } catch {
+      // Ignore cache read error
+    }
+
+    if (!hasCached && setGlobalLoading) {
+      setGlobalLoading(true);
+    }
+
+    const timeoutId = setTimeout(() => {
+      setProducts(prev => (prev.length > 0 ? prev : defaultProducts));
+      setLoading(false);
+      if (setGlobalLoading) setGlobalLoading(false);
+    }, 3000);
+
     try {
       const querySnapshot = await getDocs(collection(db, 'products'));
       if (querySnapshot.empty) {
-        setProducts(defaultProducts);
+        setProducts(prev => (prev.length > 0 ? prev : defaultProducts));
       } else {
         const list: Product[] = [];
         querySnapshot.forEach(docSnap => {
@@ -77,11 +102,18 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
             list.push({ ...data, id: docSnap.id, category: data.category || 'HGNICE' });
           }
         });
-        setProducts(list.length > 0 ? list : defaultProducts);
+        const finalProducts = list.length > 0 ? list : defaultProducts;
+        setProducts(finalProducts);
+        try {
+          localStorage.setItem('tf_cached_products', JSON.stringify(finalProducts));
+        } catch {
+          // Ignore storage quota error
+        }
       }
-    } catch (err) {
-      setProducts(defaultProducts);
+    } catch {
+      setProducts(prev => (prev.length > 0 ? prev : defaultProducts));
     } finally {
+      clearTimeout(timeoutId);
       setLoading(false);
       if (setGlobalLoading) setGlobalLoading(false);
     }

@@ -68,8 +68,8 @@ export default function App() {
       if (!user) {
         try {
           await signInAnonymously(auth);
-        } catch (err) {
-          console.error('Anonymous sign-in failed:', err);
+        } catch {
+          // Ignore anonymous sign-in failure when offline or disabled
         }
       }
       
@@ -81,17 +81,38 @@ export default function App() {
   }, []);
 
   const fetchGlobalSettings = async () => {
-    setGlobalLoading(true);
+    try {
+      const cached = localStorage.getItem('tf_cached_settings');
+      if (cached) {
+        setSettings(JSON.parse(cached));
+        setGlobalLoading(false);
+      }
+    } catch {
+      // Ignore cache read error
+    }
+
+    const timeoutId = setTimeout(() => {
+      setSettings(prev => prev || defaultSettings);
+      setGlobalLoading(false);
+    }, 3000);
+
     try {
       const docSnap = await getDoc(doc(db, 'settings', 'general'));
       if (docSnap.exists()) {
-        setSettings(docSnap.data() as StoreSettings);
+        const freshSettings = docSnap.data() as StoreSettings;
+        setSettings(freshSettings);
+        try {
+          localStorage.setItem('tf_cached_settings', JSON.stringify(freshSettings));
+        } catch {
+          // Ignore storage quota error
+        }
       } else {
-        setSettings(defaultSettings);
+        setSettings(prev => prev || defaultSettings);
       }
-    } catch (err) {
-      setSettings(defaultSettings);
+    } catch {
+      setSettings(prev => prev || defaultSettings);
     } finally {
+      clearTimeout(timeoutId);
       setGlobalLoading(false);
     }
   };

@@ -5,20 +5,48 @@
 
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { initializeFirestore } from 'firebase/firestore';
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  memoryLocalCache,
+  setLogLevel,
+  Firestore
+} from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
+
+// Silence internal @firebase/firestore 10s connection timeout warnings on slow mobile networks
+setLogLevel('silent');
 
 const app = initializeApp(firebaseConfig);
 const dbId = (firebaseConfig as any).firestoreDatabaseId;
+const targetDbId = dbId && dbId !== '(default)' ? dbId : undefined;
 
-// Use initializeFirestore with experimentalForceLongPolling enabled.
-// This forces Firestore to use standard HTTPS long-polling instead of WebSockets,
-// which prevents connection timeouts and bypasses ISP/carrier blocks on mobile networks in Bangladesh.
-export const db = initializeFirestore(
-  app,
-  { experimentalForceLongPolling: true },
-  dbId && dbId !== '(default)' ? dbId : undefined
-);
+function createFirestoreInstance(): Firestore {
+  try {
+    return initializeFirestore(
+      app,
+      {
+        experimentalAutoDetectLongPolling: true,
+        localCache: persistentLocalCache({
+          tabManager: persistentMultipleTabManager()
+        })
+      },
+      targetDbId
+    );
+  } catch {
+    return initializeFirestore(
+      app,
+      {
+        experimentalAutoDetectLongPolling: true,
+        localCache: memoryLocalCache()
+      },
+      targetDbId
+    );
+  }
+}
+
+export const db = createFirestoreInstance();
 
 export const auth = getAuth(app);
 
