@@ -118,7 +118,7 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
     setSoldOut(false);
     setIsFree(false);
     setDownloadUrl('');
-    setButtonText('Download Free (ফ্রি ডাউনলোড)');
+    setButtonText('');
     setVersion('v1.0');
     setFileSize('12 MB');
     setError(null);
@@ -140,7 +140,7 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
     setSoldOut(!!product.soldOut);
     setIsFree(!!product.isFree);
     setDownloadUrl(product.downloadUrl || '');
-    setButtonText(product.buttonText || 'Download Free (ফ্রি ডাউনলোড)');
+    setButtonText(product.buttonText || '');
     setVersion(product.version || '');
     setFileSize(product.fileSize || '');
     setError(null);
@@ -179,7 +179,7 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
         soldOut: isFree ? false : Boolean(soldOut),
         isFree: Boolean(isFree),
         downloadUrl: downloadUrl.trim() || '',
-        buttonText: buttonText.trim() || 'Download Free',
+        buttonText: buttonText.trim(),
         version: version.trim() || '',
         fileSize: fileSize.trim() || '',
         updatedAt: new Date().toISOString()
@@ -527,6 +527,21 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
                     placeholder="প্রোডাক্টে ক্লিক করলে কাস্টমার যে বিস্তারিত টিউটোরিয়াল বা গাইড দেখতে পাবে..."
                     className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-white resize-y transition-colors"
                   />
+                </div>
+
+                {/* Custom Button Text */}
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-1">
+                    Custom Button Text (বাটনের লেখা - Optional)
+                  </label>
+                  <input 
+                    type="text"
+                    value={buttonText}
+                    onChange={e => setButtonText(e.target.value)}
+                    placeholder="যেমন: ORDER NOW, BUY NOW, DOWNLOAD FREE"
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-white transition-colors"
+                  />
+                  <p className="text-[10px] text-neutral-500 mt-0.5">ফাঁকা রাখলে এডমিন সেটিংসের ডিফল্ট লেখাটি দেখাবে।</p>
                 </div>
 
                 {/* YouTube Video Proof Link */}

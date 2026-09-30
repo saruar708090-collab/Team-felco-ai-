@@ -88,6 +88,7 @@ export const AdminSiteCustomizer: React.FC<AdminSiteCustomizerProps> = ({ curren
     authNotice: '',
     gameFilterLabel: 'Game Filter:',
     buyNowBtnText: 'BUY NOW ➔',
+    freeDownloadBtnText: 'DOWNLOAD FREE (ফ্রি ডাউনলোড)',
     maintenanceMode: false,
     maintenanceMessage: 'We are currently updating our systems for better accuracy. We will be back online shortly!',
 
@@ -675,6 +676,19 @@ export const AdminSiteCustomizer: React.FC<AdminSiteCustomizerProps> = ({ curren
                     className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500"
                   />
                   <span className="text-[10px] text-neutral-500">প্রোডাক্টের নিজস্ব বাটন টেক্সট না থাকলে এটি ব্যবহৃত হবে।</span>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block">
+                    Free Product Button Text (ফ্রি ডাউনলোড বাটন টেক্সট)
+                  </label>
+                  <input
+                    type="text"
+                    value={settings.freeDownloadBtnText || ''}
+                    onChange={e => setSettings(prev => ({ ...prev, freeDownloadBtnText: e.target.value }))}
+                    placeholder="Default: DOWNLOAD FREE (ফ্রি ডাউনলোড)"
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500"
+                  />
                 </div>
               </div>
             </div>

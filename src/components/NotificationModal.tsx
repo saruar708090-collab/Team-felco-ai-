@@ -6,6 +6,7 @@ import {
 import { NotificationItem } from '../types';
 import { db } from '../firebase';
 import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
+import { useCustomerAuth } from '../context/CustomerAuthContext';
 
 interface NotificationModalProps {
   isOpen: boolean;
@@ -29,13 +30,18 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
     }
   });
 
+  const { customerUser } = useCustomerAuth();
+
   useEffect(() => {
     const q = query(collection(db, 'notifications'), orderBy('createdAt', 'desc'), limit(50));
     const unsubscribe = onSnapshot(q, (snap) => {
       const list: NotificationItem[] = [];
       snap.forEach((d) => {
         const data = d.data() as NotificationItem;
-        if (data.active !== false) {
+        const isPublic = !data.targetPhone && !data.targetUserId;
+        const isForMe = data.targetPhone === customerUser?.phone || data.targetUserId === customerUser?.phone;
+
+        if (data.active !== false && (isPublic || isForMe)) {
           list.push({ ...data, id: d.id });
         }
       });
@@ -46,6 +52,12 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
 
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (isOpen && notifications.length > 0) {
+      markAllAsRead();
+    }
+  }, [isOpen, notifications.length]);
 
   if (!isOpen) return null;
 

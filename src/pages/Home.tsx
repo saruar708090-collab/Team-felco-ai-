@@ -46,26 +46,7 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
     return all;
   }, [products, customGames]);
 
-  const defaultProducts: Product[] = [
-    {
-      id: 'colour-trading-tool',
-      name: 'COLOUR TRADING TOOL',
-      description: 'Advanced algorithmic pattern analyzer and probability calculator for color trading games. Real-time signal calculation with high precision success tracking.',
-      price: 4500,
-      imageUrl: 'https://images.unsplash.com/photo-1642543492481-44e81e3914a7?w=800&auto=format&fit=crop&q=60',
-      category: 'Colour Trading Hack',
-      active: true
-    },
-    {
-      id: 'aviator-tool',
-      name: 'AVIATOR TOOL',
-      description: 'Professional multiplier predictor and crash timing analytics tool for aviator games. Engineered for precision and real-time trend visualization.',
-      price: 6500,
-      imageUrl: 'https://images.unsplash.com/photo-1622979135225-d2ba269bc1df?w=800&auto=format&fit=crop&q=60',
-      category: 'Aviator Hack',
-      active: true
-    }
-  ];
+  const defaultProducts: Product[] = [];
 
   useEffect(() => {
     fetchProducts();
@@ -270,8 +251,12 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
             ))}
           </div>
         ) : filteredProducts.length === 0 ? (
-          <div className={`text-center py-16 border rounded-2xl ${isLight ? 'bg-white border-slate-200 text-neutral-500' : 'bg-neutral-900/40 border-neutral-800 text-neutral-400'}`}>
-            <p className="text-xs font-bold uppercase tracking-wider">No tools available for '{selectedCategory}'.</p>
+          <div className={`text-center py-20 border rounded-[32px] ${isLight ? 'bg-white border-slate-200' : 'bg-neutral-900/40 border-neutral-800/60'}`}>
+            <div className="w-16 h-16 bg-neutral-900/50 rounded-full flex items-center justify-center mx-auto mb-4 border border-neutral-800">
+              <Gamepad2 className="w-8 h-8 text-neutral-600" />
+            </div>
+            <p className="text-sm font-black uppercase tracking-widest text-neutral-500">বর্তমানে কোনো সার্ভিস বা টুলস যুক্ত নেই</p>
+            <p className="text-[10px] text-neutral-600 mt-1 uppercase">অ্যাডমিন নতুন সার্ভিস যুক্ত করলে এখানে দেখতে পাবেন</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
@@ -415,7 +400,7 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
                         className="w-full py-2 bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-black font-black uppercase text-[11px] sm:text-xs tracking-wider rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20 active:scale-[0.98] cursor-pointer"
                       >
                         <Download className="w-3.5 h-3.5 stroke-[2.5]" />
-                        <span>{product.buttonText || 'Download Free'}</span>
+                        <span>{product.buttonText || settings?.freeDownloadBtnText || 'Download Free'}</span>
                       </button>
                     ) : (
                       <button 

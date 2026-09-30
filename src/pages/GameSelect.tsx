@@ -114,7 +114,7 @@ export const GameSelect: React.FC<GameSelectProps> = ({ orderDraft, setOrderDraf
     const isColourTrading = pName.includes('colour') || pName.includes('color') || pName.includes('bdwin') || pName.includes('hgnice') || pName.includes('dkwin') || pName.includes('tiranga');
 
     if (isAviator) {
-      const filtered = games.filter(g => g.type === 'aviator');
+      const filtered = games.filter(g => g.type === 'aviator' || g.type === 'colour_trading');
       return { games: filtered.length > 0 ? filtered : games, toolTitle: 'Aviator Supported Games' };
     }
 

@@ -59,6 +59,10 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
 
   const handleBuyNow = () => {
     if (!product || product.soldOut) return;
+    if (product.isFree && product.downloadUrl) {
+      window.open(product.downloadUrl, '_blank');
+      return;
+    }
     setOrderDraft({
       productId: product.id,
       productName: product.name,
@@ -185,7 +189,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                 : 'bg-emerald-500 text-black hover:bg-emerald-400 shadow-lg shadow-emerald-500/20'
             }`}
           >
-            {product.soldOut ? 'Sold Out' : (product.buttonText || settings?.buyNowBtnText || 'BUY NOW')}
+            {product.soldOut ? 'Sold Out' : (product.isFree ? (product.buttonText || settings?.freeDownloadBtnText || 'Download Free') : (product.buttonText || settings?.buyNowBtnText || 'BUY NOW'))}
           </button>
         </div>
       </div>

@@ -5,7 +5,7 @@ import { db } from '../firebase';
 import { collection, onSnapshot, doc, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
 import { 
   Users, Search, ShieldAlert, ShieldCheck, Edit3, Trash2, 
-  UserPlus, Lock, Phone, User, Eye, EyeOff, Check, X, AlertTriangle, RefreshCw 
+  UserPlus, Lock, Phone, User, Eye, EyeOff, Check, X, AlertTriangle, RefreshCw, Bell 
 } from 'lucide-react';
 
 interface AdminUsersProps {
@@ -387,6 +387,16 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ currentRoute, navigate }
                         {/* Actions */}
                         <td className="py-4 px-4 sm:px-6 text-right">
                           <div className="inline-flex items-center gap-1.5">
+                            {/* Send Message */}
+                            <button
+                              type="button"
+                              onClick={() => navigate(`/admin/notifications?target=${user.phone}`)}
+                              className="p-1.5 rounded-lg bg-blue-600/10 border border-blue-500/20 text-blue-400 hover:text-white hover:bg-blue-600/20 transition-all cursor-pointer"
+                              title="Send direct notification message"
+                            >
+                              <Bell className="w-3.5 h-3.5" />
+                            </button>
+
                             {/* Block / Unblock Toggle */}
                             <button
                               type="button"

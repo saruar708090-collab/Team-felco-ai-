@@ -30,7 +30,7 @@ import { AuthPage } from './pages/AuthPage';
 import { OrderDraft, Order, StoreSettings } from './types';
 import { db, auth } from './firebase';
 import { doc, getDoc } from 'firebase/firestore';
-import { Headphones, X, ShieldAlert } from 'lucide-react';
+import { Headphones, X, ShieldAlert, ArrowRight } from 'lucide-react';
 import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
 
 export default function App() {
@@ -461,74 +461,95 @@ export default function App() {
           {!isSecretPortal && !globalLoading && !isPopupDismissed && settings?.popupNoticeActive && (settings?.popupNoticeImage || settings?.popupNoticeText || settings?.popupNoticeTitle) && (
             <div
               onClick={() => setIsPopupDismissed(true)}
-              className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-modal-backdrop"
+              className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-xl animate-modal-backdrop"
             >
               <div
                 onClick={e => e.stopPropagation()}
-                className="relative w-full max-w-md rounded-[28px] overflow-hidden border-2 border-blue-500/40 bg-gradient-to-b from-[#0f172a] via-[#0b0f19] to-[#06080F] text-white shadow-[0_25px_70px_rgba(0,0,0,0.85)] flex flex-col max-h-[90vh] animate-spring-modal"
+                className="relative w-full max-w-[440px] rounded-[40px] overflow-hidden border border-white/10 bg-[#070709] text-white shadow-[0_40px_100px_rgba(0,0,0,0.9)] flex flex-col max-h-[90vh] animate-spring-modal"
               >
-                {/* Instant Close (X) Button */}
+                {/* Visual Accent Top Bar */}
+                <div className="h-1.5 w-full bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600 shrink-0" />
+
+                {/* Instant Close (X) Button - Minimalist Style */}
                 <button
                   type="button"
                   onClick={() => setIsPopupDismissed(true)}
-                  aria-label="Close notice"
-                  className="absolute top-3 right-3 z-30 w-8 h-8 rounded-full bg-black/80 hover:bg-black text-white border border-white/20 flex items-center justify-center shadow-lg transition-transform active:scale-90 hover:scale-105 cursor-pointer"
+                  className="absolute top-5 right-5 z-30 w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 text-white/70 hover:text-white flex items-center justify-center transition-all active:scale-90 cursor-pointer backdrop-blur-md border border-white/10"
                 >
                   <X className="w-4 h-4" />
                 </button>
 
-                {/* Banner Photo */}
+                {/* Banner Photo with Inner Shadow & Overlay */}
                 {settings.popupNoticeImage && (
-                  <div className="w-full bg-black relative shrink-0 max-h-[48vh] overflow-hidden flex items-center justify-center border-b border-neutral-800">
+                  <div className="w-full relative shrink-0 aspect-[16/10] overflow-hidden">
                     <img
                       src={settings.popupNoticeImage}
                       alt="Notice"
-                      className="w-full h-full object-cover max-h-[48vh]"
+                      className="w-full h-full object-cover"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a] via-transparent to-transparent opacity-60 pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#070709] via-transparent to-transparent opacity-80" />
+                    <div className="absolute inset-0 shadow-[inset_0_-20px_40px_rgba(7,7,9,0.8)]" />
                   </div>
                 )}
 
                 {/* Content Container */}
-                <div className="p-5 sm:p-6 space-y-3.5 overflow-y-auto flex-1">
-                  {settings.popupNoticeTitle && (
-                    <div className="text-center">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-blue-400 bg-blue-500/10 border border-blue-500/20 px-3 py-1 rounded-full inline-block mb-1.5">
-                        OFFICIAL ANNOUNCEMENT
+                <div className={`p-8 sm:p-10 space-y-6 overflow-y-auto flex-1 ${!settings.popupNoticeImage ? 'pt-12' : ''}`}>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-center gap-2 mb-1">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                      <span className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-400">
+                        OFFICIAL NOTICE
                       </span>
-                      <h2 className="text-base sm:text-lg font-black uppercase text-white tracking-wide leading-snug">
+                    </div>
+                    
+                    {settings.popupNoticeTitle && (
+                      <h2 className="text-xl sm:text-2xl font-black uppercase text-center text-white tracking-tight leading-[1.1]">
                         {settings.popupNoticeTitle}
                       </h2>
+                    )}
+                  </div>
+
+                  {settings.popupNoticeText && (
+                    <div className="relative">
+                      <p className="text-xs sm:text-[13px] text-neutral-400 font-medium leading-relaxed whitespace-pre-line text-center px-2">
+                        {settings.popupNoticeText}
+                      </p>
                     </div>
                   )}
 
-                  {settings.popupNoticeText && (
-                    <p className="text-xs sm:text-sm text-neutral-300 font-medium leading-relaxed whitespace-pre-line text-center">
-                      {settings.popupNoticeText}
-                    </p>
-                  )}
-
-                  {/* Customizable Action Button */}
-                  {settings.popupNoticeButtonLink ? (
-                    <a
-                      href={settings.popupNoticeButtonLink}
-                      target="_blank"
-                      rel="noreferrer"
-                      onClick={() => setIsPopupDismissed(true)}
-                      className="w-full py-3.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-xs sm:text-sm uppercase tracking-wider rounded-2xl transition-all shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 cursor-pointer mt-2"
-                    >
-                      <span>{settings.popupNoticeButtonText || 'Join Telegram Channel'}</span>
-                      <span className="text-sm">→</span>
-                    </a>
-                  ) : (
+                  {/* Dynamic Action Button - Ultra Premium Design */}
+                  <div className="pt-2">
+                    {settings.popupNoticeButtonLink ? (
+                      <a
+                        href={settings.popupNoticeButtonLink}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={() => setIsPopupDismissed(true)}
+                        className="group relative w-full py-4 bg-white text-black font-black text-xs sm:text-sm uppercase tracking-widest rounded-[20px] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2.5 overflow-hidden"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-indigo-50 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <span className="relative z-10">{settings.popupNoticeButtonText || 'GET STARTED'}</span>
+                        <ArrowRight className="w-4 h-4 relative z-10 transition-transform group-hover:translate-x-1" />
+                      </a>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setIsPopupDismissed(true)}
+                        className="group relative w-full py-4 bg-white text-black font-black text-xs sm:text-sm uppercase tracking-widest rounded-[20px] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2.5 overflow-hidden cursor-pointer"
+                      >
+                         <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-indigo-50 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <span className="relative z-10">{settings.popupNoticeButtonText || 'CONTINUE TO STORE'}</span>
+                        <ArrowRight className="w-4 h-4 relative z-10 transition-transform group-hover:translate-x-1" />
+                      </button>
+                    )}
+                    
                     <button
-                      type="button"
                       onClick={() => setIsPopupDismissed(true)}
-                      className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-xs sm:text-sm uppercase tracking-wider rounded-2xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer mt-2"
+                      className="w-full mt-4 text-[10px] font-bold text-neutral-600 hover:text-neutral-400 uppercase tracking-widest transition-colors"
                     >
-                      <span>{settings.popupNoticeButtonText || 'Continue to Store'}</span>
+                      Dismiss Message
                     </button>
-                  )}
+                  </div>
                 </div>
               </div>
             </div>

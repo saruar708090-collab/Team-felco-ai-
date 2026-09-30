@@ -29,9 +29,20 @@ export const AdminNotifications: React.FC<AdminNotificationsProps> = ({ currentR
   const [type, setType] = useState<NotificationItem['type']>('notice');
   const [badge, setBadge] = useState('NOTICE');
   const [link, setLink] = useState('');
+  const [targetPhone, setTargetPhone] = useState('');
 
   useEffect(() => {
     fetchNotifications();
+    
+    // Check for target user in URL params
+    const params = new URLSearchParams(window.location.search);
+    const target = params.get('target');
+    if (target) {
+      setTargetPhone(target);
+      setModalOpen(true);
+      // Clean up URL without refreshing
+      window.history.replaceState({}, '', '/admin/notifications');
+    }
   }, []);
 
   const fetchNotifications = async () => {
@@ -66,6 +77,7 @@ export const AdminNotifications: React.FC<AdminNotificationsProps> = ({ currentR
     setType('notice');
     setBadge('NOTICE');
     setLink('');
+    setTargetPhone('');
     setModalOpen(true);
   };
 
@@ -95,6 +107,7 @@ export const AdminNotifications: React.FC<AdminNotificationsProps> = ({ currentR
         type,
         badge: badge.trim().toUpperCase(),
         link: link.trim() || '',
+        targetPhone: targetPhone.trim() || '',
         active: true,
         createdAt: new Date().toISOString()
       };
@@ -427,6 +440,20 @@ export const AdminNotifications: React.FC<AdminNotificationsProps> = ({ currentR
                     required
                     className="w-full bg-black border border-neutral-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
                   />
+                </div>
+
+                <div className="bg-blue-500/5 border border-blue-500/10 p-3 rounded-2xl">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-blue-400 block mb-1">
+                    🎯 নির্দিষ্ট ইউজার টার্গেট (Target User Phone - Optional)
+                  </label>
+                  <input
+                    type="tel"
+                    value={targetPhone}
+                    onChange={e => setTargetPhone(e.target.value)}
+                    placeholder="যেমন: 017XXXXXXXX (খালি রাখলে সবাই দেখবে)"
+                    className="w-full bg-black border border-neutral-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 font-mono"
+                  />
+                  <p className="text-[9px] text-neutral-500 mt-1 italic">নির্দিষ্ট কোনো কাস্টমারকে স্পেশাল মেসেজ পাঠাতে তার মোবাইল নাম্বারটি দিন।</p>
                 </div>
 
                 <div>

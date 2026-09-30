@@ -126,6 +126,7 @@ export interface StoreSettings {
   maintenanceMessage?: string;
   forgotPasswordTitle?: string;
   forgotPasswordText?: string;
+  freeDownloadBtnText?: string;
 }
 
 export interface OrderDraft {
@@ -160,6 +161,8 @@ export interface NotificationItem {
   imageUrl?: string;
   targetOrderId?: string;
   targetTrxId?: string;
+  targetPhone?: string;
+  targetUserId?: string;
   active: boolean;
   createdAt: string;
 }

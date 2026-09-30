@@ -45,7 +45,10 @@ export const Navbar: React.FC<NavbarProps> = ({
         let count = 0;
         snap.forEach(d => {
           const data = d.data() as NotificationItem;
-          if (data.active !== false && !readIds.includes(d.id)) {
+          const isPublic = !data.targetPhone && !data.targetUserId;
+          const isForMe = data.targetPhone === customerUser?.phone || data.targetUserId === customerUser?.phone;
+          
+          if (data.active !== false && (isPublic || isForMe) && !readIds.includes(d.id)) {
             count++;
           }
         });
