@@ -20,12 +20,17 @@ import { AdminCoupons } from './pages/AdminCoupons';
 import { AdminGames } from './pages/AdminGames';
 import { AdminSiteCustomizer } from './pages/AdminSiteCustomizer';
 import { AdminReviews } from './pages/AdminReviews';
+import { AdminUsers } from './pages/AdminUsers';
 import { ProductDetailsPage } from './pages/ProductDetailsPage';
 import { NotificationModal } from './components/NotificationModal';
+import { AuthModal } from './components/AuthModal';
+import { AccountProfileModal } from './components/AccountProfileModal';
+import { OrderHistoryModal } from './components/OrderHistoryModal';
+import { AuthPage } from './pages/AuthPage';
 import { OrderDraft, Order, StoreSettings } from './types';
 import { db, auth } from './firebase';
 import { doc, getDoc } from 'firebase/firestore';
-import { Headphones, X } from 'lucide-react';
+import { Headphones, X, ShieldAlert } from 'lucide-react';
 import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
 
 export default function App() {
@@ -35,6 +40,10 @@ export default function App() {
   const [isCustomerServiceOpen, setIsCustomerServiceOpen] = useState(false);
   const [isOrderTrackerOpen, setIsOrderTrackerOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+  const [isOrderHistoryModalOpen, setIsOrderHistoryModalOpen] = useState(false);
   const [settings, setSettings] = useState<StoreSettings | null>(null);
   const [globalLoading, setGlobalLoading] = useState(true);
   const [isPopupDismissed, setIsPopupDismissed] = useState(false);
@@ -144,6 +153,8 @@ export default function App() {
     navigate('/tf-admin-secure-portal');
   }
 
+  const isMaintenanceMode = settings?.maintenanceMode && !isAdminRoute && !isSecretPortal;
+
   // Render correct page
   const renderPage = () => {
     if (currentRoute.startsWith('/product/')) {
@@ -203,6 +214,64 @@ export default function App() {
         return <AdminCoupons currentRoute={currentRoute} navigate={navigate} />;
       case '/admin/reviews':
         return <AdminReviews currentRoute={currentRoute} navigate={navigate} />;
+      case '/admin/users':
+        return <AdminUsers currentRoute={currentRoute} navigate={navigate} />;
+      case '/login':
+        return <AuthPage initialMode="login" navigate={navigate} theme={theme} settings={settings} />;
+      case '/register':
+        return <AuthPage initialMode="register" navigate={navigate} theme={theme} settings={settings} />;
+      case '/auth':
+        return <AuthPage initialMode="login" navigate={navigate} theme={theme} settings={settings} />;
+      case '/orders':
+      case '/order-history':
+      case '/my-orders':
+        return (
+          <>
+            <Home 
+              navigate={navigate} 
+              setOrderDraft={setOrderDraft} 
+              onOpenCustomerService={() => setIsCustomerServiceOpen(true)} 
+              onOpenOrderTracker={() => setIsOrderTrackerOpen(true)}
+              theme={theme}
+              settings={settings}
+              setGlobalLoading={setGlobalLoading}
+            />
+            <OrderHistoryModal
+              isOpen={true}
+              onClose={() => navigate('/')}
+              onOpenAuth={() => {
+                setAuthModalMode('login');
+                setIsAuthModalOpen(true);
+              }}
+            />
+          </>
+        );
+      case '/account':
+      case '/profile':
+        return (
+          <>
+            <Home 
+              navigate={navigate} 
+              setOrderDraft={setOrderDraft} 
+              onOpenCustomerService={() => setIsCustomerServiceOpen(true)} 
+              onOpenOrderTracker={() => setIsOrderTrackerOpen(true)}
+              theme={theme}
+              settings={settings}
+              setGlobalLoading={setGlobalLoading}
+            />
+            <AccountProfileModal
+              isOpen={true}
+              onClose={() => navigate('/')}
+              onOpenOrderHistory={() => {
+                navigate('/order-history');
+              }}
+              onOpenAuth={() => {
+                setAuthModalMode('login');
+                setIsAuthModalOpen(true);
+              }}
+            />
+          </>
+        );
       default:
         return (
           <Home 
@@ -222,13 +291,64 @@ export default function App() {
     <div className={`min-h-screen font-sans selection:bg-white selection:text-black transition-colors duration-300 ${
       theme === 'light' ? 'bg-slate-100 text-neutral-900' : 'bg-[#0a0a0c] text-white'
     }`}>
-      {!isAdminRoute && (
+      {isMaintenanceMode ? (
+        <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-[#070709] relative overflow-hidden">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-96 bg-red-600/5 blur-[120px] rounded-full pointer-events-none" />
+          
+          <div className="relative z-10 space-y-6 max-w-md">
+            <div className="w-20 h-20 rounded-3xl bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-500 mx-auto shadow-2xl shadow-red-500/10 animate-pulse">
+              <ShieldAlert className="w-10 h-10" />
+            </div>
+            
+            <div className="space-y-2">
+              <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tighter text-white">
+                Under Maintenance
+              </h1>
+              <div className="h-1 w-20 bg-red-600 mx-auto rounded-full" />
+            </div>
+
+            <p className="text-sm sm:text-base text-neutral-400 font-medium leading-relaxed bg-neutral-900/50 p-6 rounded-2xl border border-neutral-800">
+              {settings?.maintenanceMessage || 'We are currently updating our systems to provide a better experience. We will be back online shortly!'}
+            </p>
+
+            <div className="flex flex-col gap-3 pt-4">
+              <p className="text-[10px] uppercase font-black tracking-widest text-neutral-500">Need urgent support?</p>
+              <div className="flex items-center justify-center gap-4">
+                <a 
+                  href={settings?.supportTelegram || 'https://t.me'} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="px-5 py-2.5 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 rounded-xl text-xs font-black uppercase tracking-wider text-white transition-all"
+                >
+                  Telegram
+                </a>
+                <a 
+                  href={settings?.supportWhatsApp ? `https://wa.me/${settings.supportWhatsApp.replace(/[^0-9]/g, '')}` : '#'} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="px-5 py-2.5 bg-[#25D366]/10 hover:bg-[#25D366]/20 border border-[#25D366]/30 rounded-xl text-xs font-black uppercase tracking-wider text-[#25D366] transition-all"
+                >
+                  WhatsApp
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <>
+          {!isAdminRoute && (
         <Navbar 
           currentRoute={currentRoute} 
           navigate={navigate} 
           onOpenCustomerService={() => setIsCustomerServiceOpen(true)} 
           onOpenOrderTracker={() => setIsOrderTrackerOpen(true)}
           onOpenNotifications={() => setIsNotificationsOpen(true)}
+          onOpenAccount={() => setIsAccountModalOpen(true)}
+          onOpenOrderHistory={() => setIsOrderHistoryModalOpen(true)}
+          onOpenAuth={(mode?: 'login' | 'register') => {
+            setAuthModalMode(mode || 'login');
+            setIsAuthModalOpen(true);
+          }}
           theme={theme}
           toggleTheme={toggleTheme}
           settings={settings}
@@ -300,6 +420,41 @@ export default function App() {
             onClose={() => setIsNotificationsOpen(false)}
             navigate={navigate}
             onOpenOrderTracker={() => setIsOrderTrackerOpen(true)}
+          />
+
+          {/* Customer Auth Modal (Login / Register) */}
+          <AuthModal
+            isOpen={isAuthModalOpen}
+            onClose={() => setIsAuthModalOpen(false)}
+            defaultMode={authModalMode}
+            onSuccess={() => setIsAuthModalOpen(false)}
+            settings={settings}
+          />
+
+          {/* Customer Account Profile Modal */}
+          <AccountProfileModal
+            isOpen={isAccountModalOpen}
+            onClose={() => setIsAccountModalOpen(false)}
+            onOpenOrderHistory={() => {
+              setIsAccountModalOpen(false);
+              setIsOrderHistoryModalOpen(true);
+            }}
+            onOpenAuth={() => {
+              setIsAccountModalOpen(false);
+              setAuthModalMode('login');
+              setIsAuthModalOpen(true);
+            }}
+          />
+
+          {/* Customer Order History Modal (ODER History) */}
+          <OrderHistoryModal
+            isOpen={isOrderHistoryModalOpen}
+            onClose={() => setIsOrderHistoryModalOpen(false)}
+            onOpenAuth={() => {
+              setIsOrderHistoryModalOpen(false);
+              setAuthModalMode('login');
+              setIsAuthModalOpen(true);
+            }}
           />
 
           {/* ULTRA-PREMIUM ENTRY NOTICE POPUP MODAL */}
@@ -383,6 +538,8 @@ export default function App() {
           <LiveSalesActivity />
         </>
       )}
+    </>
+  )}
 
       {/* Global loading spinner overlay */}
       {globalLoading && (

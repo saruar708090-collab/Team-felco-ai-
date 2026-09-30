@@ -147,11 +147,11 @@ export const GameSelect: React.FC<GameSelectProps> = ({ orderDraft, setOrderDraf
   const renderGameBadgeLogo = (game: GameItem) => {
     if (game.logoUrl && game.logoUrl.trim()) {
       return (
-        <div className="w-full h-12 rounded-xl overflow-hidden shadow-md border border-slate-300/80 bg-neutral-900 relative flex items-center justify-center">
+        <div className="w-full h-full rounded-xl overflow-hidden bg-white relative flex items-center justify-center">
           <img 
             src={game.logoUrl} 
             alt={game.name} 
-            className="w-full h-full object-cover rounded-xl" 
+            className="w-full h-full object-contain" 
           />
         </div>
       );
@@ -325,11 +325,11 @@ export const GameSelect: React.FC<GameSelectProps> = ({ orderDraft, setOrderDraf
                     )}
 
                     {/* Logo/Badge Container - perfectly centered */}
-                    <div className="my-auto w-full pt-2">
+                    <div className="flex-1 w-full flex items-center justify-center overflow-hidden">
                       {renderGameBadgeLogo(game)}
                     </div>
 
-                    <span className="text-[11px] font-black text-slate-800 tracking-tight mt-1 line-clamp-1 text-center">
+                    <span className="text-[10px] sm:text-[11px] font-black text-slate-800 tracking-tight mt-1.5 line-clamp-1 text-center">
                       {game.name}
                     </span>
                   </div>

@@ -54,7 +54,15 @@
         "rocketNumber": { "type": "string" },
         "rocketActive": { "type": "boolean" },
         "paymentInstructions": { "type": "string" },
-        "scrollingNotice": { "type": "string", "maxLength": 500 }
+        "scrollingNotice": { "type": "string", "maxLength": 500 },
+        "authTitle": { "type": "string" },
+        "loginBtnText": { "type": "string" },
+        "registerBtnText": { "type": "string" },
+        "authNotice": { "type": "string" },
+        "gameFilterLabel": { "type": "string" },
+        "buyNowBtnText": { "type": "string" },
+        "maintenanceMode": { "type": "boolean" },
+        "maintenanceMessage": { "type": "string" }
       }
     },
     "Admin": {
@@ -95,6 +103,40 @@
         "createdAt": { "type": "string" }
       },
       "required": ["trxId", "amount", "used"]
+    },
+    "User": {
+      "title": "User",
+      "description": "Registered customer accounts",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "maxLength": 100 },
+        "phone": { "type": "string", "maxLength": 20 },
+        "password": { "type": "string" },
+        "telegramUsername": { "type": "string" },
+        "isBlocked": { "type": "boolean" },
+        "createdAt": { "type": "string" },
+        "lastLoginAt": { "type": "string" }
+      },
+      "required": ["id", "name", "phone", "password"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "Website broadcast notifications",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string", "enum": ["notice", "offer", "product", "order", "update"] },
+        "badge": { "type": "string" },
+        "link": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "targetOrderId": { "type": "string" },
+        "active": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["title", "message", "type", "active", "createdAt"]
     }
   },
   "firestore": {
@@ -121,6 +163,14 @@
     "/payment_sms/{trxId}": {
       "schema": { "$ref": "#/entities/PaymentSms" },
       "description": "Verified incoming payment SMS records for auto-verification"
+    },
+    "/users/{phone}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Registered customer accounts collection"
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/Notification" },
+      "description": "Website broadcast notifications collection"
     }
   }
 }

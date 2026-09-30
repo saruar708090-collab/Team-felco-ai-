@@ -243,7 +243,7 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
           <div className={`flex items-center gap-1.5 text-xs font-bold uppercase mr-1 shrink-0 ${isLight ? 'text-neutral-600' : 'text-neutral-400'}`}>
             <Gamepad2 className="w-4 h-4 text-emerald-500" />
-            <span>Game Filter:</span>
+            <span>{settings?.gameFilterLabel || 'Game Filter:'}</span>
           </div>
           {categories.map(cat => (
             <button
@@ -429,8 +429,8 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
                               : 'bg-white text-black hover:bg-neutral-200 shadow-md'
                         }`}
                       >
-                        <span>{product.soldOut ? 'SOLD OUT' : 'BUY NOW'}</span>
-                        {!product.soldOut && <span className="text-xs">→</span>}
+                        <span>{product.soldOut ? 'SOLD OUT' : (product.buttonText || settings?.buyNowBtnText || 'BUY NOW')}</span>
+                        {!product.soldOut && !product.buttonText && !settings?.buyNowBtnText && <span className="text-xs">→</span>}
                       </button>
                     )}
 

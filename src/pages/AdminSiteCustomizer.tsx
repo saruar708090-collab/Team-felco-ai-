@@ -19,7 +19,9 @@ import {
   Eye, 
   RotateCcw,
   Sliders,
-  Type
+  Type,
+  LogIn,
+  ShieldAlert
 } from 'lucide-react';
 
 interface AdminSiteCustomizerProps {
@@ -28,7 +30,7 @@ interface AdminSiteCustomizerProps {
 }
 
 export const AdminSiteCustomizer: React.FC<AdminSiteCustomizerProps> = ({ currentRoute, navigate }) => {
-  const [activeTab, setActiveTab] = useState<'branding' | 'popup' | 'homepage' | 'support' | 'features' | 'footer'>('branding');
+  const [activeTab, setActiveTab] = useState<'branding' | 'popup' | 'homepage' | 'support' | 'features' | 'footer' | 'auth' | 'maintenance'>('branding');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
@@ -78,6 +80,16 @@ export const AdminSiteCustomizer: React.FC<AdminSiteCustomizerProps> = ({ curren
     // Footer & About
     footerAboutText: 'অফিশিয়াল প্রোভাইডার অফ প্রিমিয়াম ডিজিটাল ট্রেডিং ও গেম অ্যানালাইসিস টুলস। সিকিউর ভেরিফিকেশন ও ইনস্ট্যান্ট ডেলিভারি।',
     footerCopyrightText: '© 2026 TEAM FELCO. All rights reserved. Official Verified Store.',
+
+    // Auth Settings
+    authTitle: 'Welcome to Team Felco',
+    loginBtnText: 'লগইন করুন',
+    registerBtnText: 'রেজিস্ট্রেশন করুন',
+    authNotice: '',
+    gameFilterLabel: 'Game Filter:',
+    buyNowBtnText: 'BUY NOW ➔',
+    maintenanceMode: false,
+    maintenanceMessage: 'We are currently updating our systems for better accuracy. We will be back online shortly!',
 
     // Payment Defaults (maintained)
     bkashNumber: '01613562615',
@@ -175,6 +187,8 @@ export const AdminSiteCustomizer: React.FC<AdminSiteCustomizerProps> = ({ curren
     { id: 'support', label: 'হোয়াটসঅ্যাপ ও সাপোর্ট', icon: Headphones, desc: 'সোশ্যাল লিংক, নাম্বার ও সময়' },
     { id: 'features', label: 'ট্র্যাকিং ও ফিচার বক্স', icon: ShieldCheck, desc: 'অর্ডার ট্র্যাকার ও গ্যারান্টি টেক্সট' },
     { id: 'footer', label: 'ফুটার ও কপিরাইট', icon: FileText, desc: 'দোকান বিবরণ ও ফুটার টেক্সট' },
+    { id: 'auth', label: 'লগইন ও রেজিস্ট্রেশন', icon: Sliders, desc: 'লগইন পেজ টেক্সট ও বাটন' },
+    { id: 'maintenance', label: 'মেইনটেন্যান্স মোড', icon: ShieldAlert, desc: 'সাইট সাময়িক বন্ধ রাখা' },
   ];
 
   return (
@@ -633,6 +647,36 @@ export const AdminSiteCustomizer: React.FC<AdminSiteCustomizerProps> = ({ curren
                   </div>
                 </div>
               </div>
+
+              {/* Dynamic Labels */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 border-t border-neutral-900 mt-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block">
+                    Game Filter Label (গেম ফিল্টার লেবেল)
+                  </label>
+                  <input
+                    type="text"
+                    value={settings.gameFilterLabel || ''}
+                    onChange={e => setSettings(prev => ({ ...prev, gameFilterLabel: e.target.value }))}
+                    placeholder="Default: Game Filter:"
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block">
+                    Default Buy Now Button Text (বাই নাউ বাটন টেক্সট)
+                  </label>
+                  <input
+                    type="text"
+                    value={settings.buyNowBtnText || ''}
+                    onChange={e => setSettings(prev => ({ ...prev, buyNowBtnText: e.target.value }))}
+                    placeholder="Default: BUY NOW ➔"
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500"
+                  />
+                  <span className="text-[10px] text-neutral-500">প্রোডাক্টের নিজস্ব বাটন টেক্সট না থাকলে এটি ব্যবহৃত হবে।</span>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -937,6 +981,152 @@ export const AdminSiteCustomizer: React.FC<AdminSiteCustomizerProps> = ({ curren
           </div>
         )}
 
+        {/* TAB 7: LOGIN & REGISTRATION */}
+        {activeTab === 'auth' && (
+          <div className="bg-neutral-950 border border-neutral-900 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl animate-fadeIn">
+            <div className="border-b border-neutral-900 pb-4">
+              <h2 className="text-lg font-black uppercase text-white flex items-center gap-2">
+                <LogIn className="w-5 h-5 text-indigo-400" />
+                <span>লগইন ও রেজিস্ট্রেশন পেজ এডিটর</span>
+              </h2>
+              <p className="text-xs text-neutral-400 mt-1">
+                লগইন এবং রেজিস্ট্রেশন পেজের টাইটেল, বাটন টেক্সট এবং স্পেশাল নোটিশ এখান থেকে এডিট করুন।
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block">
+                    Auth Page Title (পেইজের টাইটেল)
+                  </label>
+                  <input
+                    type="text"
+                    value={settings.authTitle || ''}
+                    onChange={e => setSettings(prev => ({ ...prev, authTitle: e.target.value }))}
+                    placeholder="যেমন: Welcome to Team Felco"
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block">
+                    Auth Special Notice (স্পেশাল নোটিশ - ঐচ্ছিক)
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={settings.authNotice || ''}
+                    onChange={e => setSettings(prev => ({ ...prev, authNotice: e.target.value }))}
+                    placeholder="লগইন/রেজিঃ পেজে কোনো বিশেষ বার্তা দেখাতে চাইলে এখানে লিখুন..."
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-xs sm:text-sm text-white focus:outline-none focus:border-indigo-500 leading-relaxed"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block">
+                    Login Button Text (লগইন বাটনের লেখা)
+                  </label>
+                  <input
+                    type="text"
+                    value={settings.loginBtnText || ''}
+                    onChange={e => setSettings(prev => ({ ...prev, loginBtnText: e.target.value }))}
+                    placeholder="Default: লগইন করুন"
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block">
+                    Registration Button Text (রেজিস্ট্রেশন বাটনের লেখা)
+                  </label>
+                  <input
+                    type="text"
+                    value={settings.registerBtnText || ''}
+                    onChange={e => setSettings(prev => ({ ...prev, registerBtnText: e.target.value }))}
+                    placeholder="Default: রেজিস্ট্রেশন করুন"
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+                <div className="space-y-1.5 pt-4 border-t border-neutral-900">
+                  <label className="text-xs font-black uppercase tracking-wider text-amber-400 block">
+                    Forgot Password Modal Title (পাসওয়ার্ড ভুলে গেলে পপআপ টাইটেল)
+                  </label>
+                  <input
+                    type="text"
+                    value={settings.forgotPasswordTitle || ''}
+                    onChange={e => setSettings(prev => ({ ...prev, forgotPasswordTitle: e.target.value }))}
+                    placeholder="Default: পাসওয়ার্ড ভুলে গেছেন?"
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-black uppercase tracking-wider text-amber-400 block">
+                    Forgot Password Modal Message (পাসওয়ার্ড ভুলে গেলে পপআপ মেসেজ)
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={settings.forgotPasswordText || ''}
+                    onChange={e => setSettings(prev => ({ ...prev, forgotPasswordText: e.target.value }))}
+                    placeholder="পাসওয়ার্ড উদ্ধার বা রিসেট করার জন্য কাস্টমারকে কী করতে হবে তা লিখুন..."
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 8: MAINTENANCE MODE */}
+        {activeTab === 'maintenance' && (
+          <div className="bg-neutral-950 border border-neutral-900 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl animate-fadeIn">
+            <div className="border-b border-neutral-900 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-black uppercase text-white flex items-center gap-2">
+                  <ShieldAlert className="w-5 h-5 text-red-500" />
+                  <span>মেইনটেন্যান্স মোড (Maintenance Mode)</span>
+                </h2>
+                <p className="text-xs text-neutral-400 mt-1">
+                  সাইট সাময়িকভাবে বন্ধ করে কাস্টমারদের একটি নোটিশ দেখাতে চাইলে এটি চালু করুন। (অ্যাডমিন প্যানেল সচল থাকবে)
+                </p>
+              </div>
+
+              {/* Maintenance Toggle */}
+              <div className="flex items-center gap-3 bg-neutral-900 p-2 rounded-2xl border border-neutral-800 shrink-0">
+                <span className="text-xs font-bold text-neutral-300">মোড অন/অফ:</span>
+                <button
+                  type="button"
+                  onClick={() => setSettings(prev => ({ ...prev, maintenanceMode: !prev.maintenanceMode }))}
+                  className={`px-3 py-1 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
+                    settings.maintenanceMode
+                      ? 'bg-red-500 text-white shadow-lg shadow-red-500/20'
+                      : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                  }`}
+                >
+                  {settings.maintenanceMode ? '🔴 ENABLED (বন্ধ)' : '🟢 DISABLED (চালু)'}
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block">
+                  Maintenance Notice Message (কাস্টমারদের জন্য মেসেজ)
+                </label>
+                <textarea
+                  rows={4}
+                  value={settings.maintenanceMessage || ''}
+                  onChange={e => setSettings(prev => ({ ...prev, maintenanceMessage: e.target.value }))}
+                  placeholder="যেমন: বর্তমানে সাইট আপডেট করা হচ্ছে। কিছুক্ষণের মধ্যেই আমরা ফিরছি..."
+                  className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-xs sm:text-sm text-white focus:outline-none focus:border-red-500 leading-relaxed"
+                />
+                <span className="text-[10px] text-neutral-500">মেইনটেন্যান্স মোড অন থাকলে সাধারণ কাস্টমাররা শুধু এই মেসেজটিই দেখতে পাবে।</span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </AdminLayout>
   );

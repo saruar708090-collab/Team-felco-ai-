@@ -116,6 +116,16 @@ export interface StoreSettings {
   footerCopyrightText?: string;
   facebookUrl?: string;
   youtubeUrl?: string;
+  authTitle?: string;
+  loginBtnText?: string;
+  registerBtnText?: string;
+  authNotice?: string;
+  gameFilterLabel?: string;
+  buyNowBtnText?: string;
+  maintenanceMode?: boolean;
+  maintenanceMessage?: string;
+  forgotPasswordTitle?: string;
+  forgotPasswordText?: string;
 }
 
 export interface OrderDraft {
@@ -153,3 +163,16 @@ export interface NotificationItem {
   active: boolean;
   createdAt: string;
 }
+
+export interface CustomerUser {
+  id: string; // phone number (or uid)
+  name: string;
+  phone: string;
+  password?: string;
+  telegramUsername?: string;
+  isBlocked?: boolean;
+  notes?: string;
+  createdAt: string;
+  lastLoginAt?: string;
+}
+

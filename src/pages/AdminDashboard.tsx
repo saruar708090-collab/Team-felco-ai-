@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { AdminLayout } from './AdminLayout';
 import { db, auth } from '../firebase';
 import { collection, getDocs } from 'firebase/firestore';
-import { Package, ShoppingCart, Clock, CheckCircle2, TrendingUp, ShieldCheck } from 'lucide-react';
+import { Package, ShoppingCart, Clock, CheckCircle2, TrendingUp, ShieldCheck, Users } from 'lucide-react';
 import { Product, Order } from '../types';
 
 interface AdminDashboardProps {
@@ -15,6 +15,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentRoute, na
   const [ordersCount, setOrdersCount] = useState(0);
   const [pendingCount, setPendingCount] = useState(0);
   const [completedCount, setCompletedCount] = useState(0);
+  const [usersCount, setUsersCount] = useState(0);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +48,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentRoute, na
       const orderSnap = await getDocs(collection(db, 'orders'));
       console.log('Orders fetched:', orderSnap.size);
       setOrdersCount(orderSnap.size);
+
+      const userSnap = await getDocs(collection(db, 'users'));
+      setUsersCount(userSnap.size);
 
       let pCount = 0;
       let cCount = 0;
@@ -138,6 +142,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentRoute, na
             </div>
             <div className="w-12 h-12 bg-neutral-900 border border-neutral-800 rounded-xl flex items-center justify-center text-emerald-400">
               <CheckCircle2 className="w-6 h-6" />
+            </div>
+          </div>
+
+          <div className="bg-neutral-950 border border-neutral-900 rounded-2xl p-6 flex items-center justify-between">
+            <div>
+              <span className="text-xs uppercase font-bold text-neutral-500 block mb-1">Total Users</span>
+              <span className="text-3xl font-black text-blue-400">{loading ? '...' : usersCount}</span>
+            </div>
+            <div className="w-12 h-12 bg-neutral-900 border border-neutral-800 rounded-xl flex items-center justify-center text-blue-400">
+              <TrendingUp className="w-6 h-6" />
             </div>
           </div>
         </div>

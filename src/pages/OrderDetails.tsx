@@ -7,6 +7,7 @@ import { useSEO } from '../hooks/useSEO';
 import { checkAndConsumePaymentSms } from '../utils/smsParser';
 
 import { StoreSettings } from '../types';
+import { useCustomerAuth } from '../context/CustomerAuthContext';
 
 interface OrderDetailsProps {
   orderDraft: OrderDraft;
@@ -18,6 +19,7 @@ interface OrderDetailsProps {
 
 export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderDraft, navigate, setCompletedOrder, theme = 'dark', settings }) => {
   const isLight = theme === 'light';
+  const { customerUser } = useCustomerAuth();
 
   useSEO({
     title: `Submit Proof for ${orderDraft.productName || 'Hack'}`,
@@ -29,9 +31,9 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderDraft, navigate
     return null;
   }
 
-  const [customerName, setCustomerName] = useState(orderDraft.customerName || '');
-  const [telegramId, setTelegramId] = useState(orderDraft.telegramId || '');
-  const [whatsappNumber, setWhatsappNumber] = useState(orderDraft.whatsappNumber || '');
+  const [customerName, setCustomerName] = useState(orderDraft.customerName || customerUser?.name || '');
+  const [telegramId, setTelegramId] = useState(orderDraft.telegramId || customerUser?.telegramUsername || '');
+  const [whatsappNumber, setWhatsappNumber] = useState(orderDraft.whatsappNumber || customerUser?.phone || '');
   const [paymentTrxId, setPaymentTrxId] = useState(orderDraft.paymentTrxId || '');
   const [screenshotUrl, setScreenshotUrl] = useState(orderDraft.paymentScreenshotUrl || '');
   
@@ -142,6 +144,16 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderDraft, navigate
       };
 
       await setDoc(doc(db, 'orders', orderId), newOrder);
+
+      // Save order ID to localStorage for instant Order History access
+      try {
+        const saved = JSON.parse(localStorage.getItem('felco_saved_orders') || '[]');
+        if (!saved.includes(orderId)) {
+          saved.unshift(orderId);
+          localStorage.setItem('felco_saved_orders', JSON.stringify(saved));
+        }
+      } catch {}
+
       setCompletedOrder(newOrder);
       navigate('/order/success');
     } catch (err: any) {

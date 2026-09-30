@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, Headphones, Sun, Moon, Shield, Bell } from 'lucide-react';
+import { Menu, X, Headphones, Sun, Moon, Shield, Bell, User, ShoppingBag, LogIn, LogOut } from 'lucide-react';
 import { StoreSettings, NotificationItem } from '../types';
 import { db } from '../firebase';
 import { collection, onSnapshot, query, limit } from 'firebase/firestore';
+import { ThreeDotMenu } from './ThreeDotMenu';
+import { useCustomerAuth } from '../context/CustomerAuthContext';
 
 interface NavbarProps {
   currentRoute: string;
@@ -10,6 +12,9 @@ interface NavbarProps {
   onOpenCustomerService: () => void;
   onOpenOrderTracker: () => void;
   onOpenNotifications?: () => void;
+  onOpenAccount: () => void;
+  onOpenOrderHistory: () => void;
+  onOpenAuth: (mode?: 'login' | 'register') => void;
   theme: 'dark' | 'light';
   toggleTheme: () => void;
   settings?: StoreSettings | null;
@@ -21,10 +26,14 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenCustomerService, 
   onOpenOrderTracker,
   onOpenNotifications,
+  onOpenAccount,
+  onOpenOrderHistory,
+  onOpenAuth,
   theme,
   toggleTheme,
   settings
 }) => {
+  const { customerUser, logout } = useCustomerAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -180,15 +189,31 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
               </svg>
             </a>
+
+            <div className="h-4 w-[1px] bg-neutral-800"></div>
+
+            {/* Professional Three-Dot Menu (Desktop) */}
+            <ThreeDotMenu
+              onOpenAccount={onOpenAccount}
+              onOpenOrderHistory={onOpenOrderHistory}
+              onOpenAuth={onOpenAuth}
+              onOpenOrderTracker={onOpenOrderTracker}
+              onOpenCustomerService={onOpenCustomerService}
+              onOpenNotifications={onOpenNotifications}
+              theme={theme}
+              toggleTheme={toggleTheme}
+              settings={settings}
+              navigate={navigate}
+            />
           </div>
         </div>
 
-        {/* Mobile menu button & Theme toggle */}
-        <div className="flex items-center md:hidden space-x-2">
+        {/* Mobile controls: Bell, Theme, and single Rightmost Three-Dot Menu */}
+        <div className="flex items-center md:hidden space-x-1.5">
           {/* Mobile Bell Button */}
           <button
             onClick={onOpenNotifications}
-            className="relative p-2 text-blue-400 bg-neutral-900 rounded-lg border border-neutral-800 cursor-pointer"
+            className="relative p-2 text-blue-400 bg-neutral-900 rounded-xl border border-neutral-800 cursor-pointer"
             title="নোটিফিকেশন সেন্টার"
           >
             <Bell className="w-4 h-4" />
@@ -199,71 +224,26 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
           </button>
 
+          {/* Theme switch */}
           <button
             onClick={toggleTheme}
-            className="p-2 text-amber-400 bg-neutral-900 rounded-lg border border-neutral-800"
+            className="p-2 text-amber-400 bg-neutral-900 rounded-xl border border-neutral-800 cursor-pointer"
+            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
           >
             {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4 text-blue-400" />}
           </button>
-          <button 
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-1.5 text-neutral-300 hover:text-white bg-neutral-900 rounded-lg border border-neutral-800"
-          >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
+
+          {/* Single Rightmost Three-Dot Menu */}
+          <ThreeDotMenu
+            onOpenAccount={onOpenAccount}
+            onOpenOrderHistory={onOpenOrderHistory}
+            onOpenAuth={onOpenAuth}
+            onOpenCustomerService={onOpenCustomerService}
+            settings={settings}
+            navigate={navigate}
+          />
         </div>
       </div>
-
-      {/* Mobile dropdown */}
-      {mobileMenuOpen && (
-        <div className="md:hidden bg-[#0a0a0c] border-b border-neutral-800 px-4 py-3 space-y-2 shadow-2xl">
-          <button 
-            onClick={() => { navigate('/'); setMobileMenuOpen(false); }}
-            className="block w-full text-left py-2 px-3 rounded-lg text-xs font-bold uppercase tracking-wider text-neutral-300 hover:bg-neutral-900 hover:text-white"
-          >
-            Home Store
-          </button>
-
-          <button 
-            onClick={() => { onOpenNotifications?.(); setMobileMenuOpen(false); }}
-            className="flex items-center justify-between w-full text-left py-2 px-3 rounded-lg text-xs font-bold uppercase tracking-wider bg-neutral-900 text-white border border-neutral-800"
-          >
-            <div className="flex items-center gap-2">
-              <Bell className="w-4 h-4 text-blue-400" />
-              <span>নোটিফিকেশন ও অফার</span>
-            </div>
-            {unreadCount > 0 && (
-              <span className="px-2 py-0.5 bg-red-500 text-white text-[10px] font-black rounded-full">
-                {unreadCount} নতুন
-              </span>
-            )}
-          </button>
-          <button 
-            onClick={() => { navigate('/'); setMobileMenuOpen(false); }}
-            className="block w-full text-left py-2 px-3 rounded-lg text-xs font-bold uppercase tracking-wider text-neutral-300 hover:bg-neutral-900 hover:text-white"
-          >
-            Home Store
-          </button>
-
-          <button 
-            onClick={() => { onOpenOrderTracker(); setMobileMenuOpen(false); }}
-            className="flex items-center gap-2 w-full text-left py-2 px-3 rounded-lg text-xs font-bold uppercase tracking-wider bg-neutral-900 text-white border border-neutral-800"
-          >
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            Track Order Status
-          </button>
-          
-          <button 
-            onClick={() => { onOpenCustomerService(); setMobileMenuOpen(false); }}
-            className="flex items-center gap-2 w-full text-left py-2 px-3 rounded-lg text-xs font-bold uppercase tracking-wider bg-neutral-900 text-white border border-neutral-800"
-          >
-            <Headphones className="w-4 h-4 text-emerald-400" />
-            Customer Service Chat
-          </button>
-
-
-        </div>
-      )}
     </header>
   );
 };
