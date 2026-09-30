@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { OrderDraft, Order } from '../types';
 import { db } from '../firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, collection, getDocs, query, where } from 'firebase/firestore';
 import { ArrowRight, ArrowLeft, Upload, CheckCircle2, AlertCircle, ShieldCheck, Sparkles, Key, Check, MessageCircle, Phone, Send } from 'lucide-react';
 import { useSEO } from '../hooks/useSEO';
 import { checkAndConsumePaymentSms } from '../utils/smsParser';
@@ -93,9 +93,31 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderDraft, navigate
   const handleSubmitOrder = async () => {
     setSubmitting(true);
     try {
+      const cleanTrxId = paymentTrxId.trim().toUpperCase();
+
+      // 1. Prevent duplicate TrxID usage across existing orders
+      const existingOrdersQuery = query(collection(db, 'orders'), where('paymentTrxId', '==', cleanTrxId));
+      const existingOrdersSnap = await getDocs(existingOrdersQuery);
+      if (!existingOrdersSnap.empty) {
+        setError('❌ এই ট্রানজেকশন আইডি (TrxID) দিয়ে ইতিপূর্বেই একটি অর্ডার করা হয়েছে। একই TrxID দ্বিতীয়বার ব্যবহার করা যাবে না।');
+        setShowConfirmModal(false);
+        setSubmitting(false);
+        setShowErrorPopup(true);
+        return;
+      }
+
+      // 2. Anti-fake validation checks
+      const cleanPhone = whatsappNumber.trim().replace(/[^0-9]/g, '');
+      if (cleanPhone.length < 10 || /^([0-9])\1+$/.test(cleanPhone) || cleanTrxId.length < 6 || /^([A-Z0-9])\1+$/.test(cleanTrxId)) {
+        setError('❌ ফেক বা ভুল তথ্য দিয়ে অর্ডার সাবমিট করা যাবে না। দয়া করে সঠিক মোবাইল নাম্বার ও সঠিক ট্রানজেকশন আইডি (TrxID) প্রদান করুন।');
+        setShowConfirmModal(false);
+        setSubmitting(false);
+        setShowErrorPopup(true);
+        return;
+      }
+
       const randomNum = Math.floor(100000 + Math.random() * 900000);
       const orderId = `TFS-2026-${randomNum}`;
-      const cleanTrxId = paymentTrxId.trim().toUpperCase();
       const finalPayable = orderDraft.finalAmount || orderDraft.productPrice || 0;
 
       // Optional SMS verification check (if exists)
