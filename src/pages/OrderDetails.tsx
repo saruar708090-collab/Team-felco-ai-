@@ -36,6 +36,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderDraft, navigate
   const [screenshotUrl, setScreenshotUrl] = useState(orderDraft.paymentScreenshotUrl || '');
   
   const [error, setError] = useState('');
+  const [showErrorPopup, setShowErrorPopup] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -81,7 +82,8 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderDraft, navigate
   const handleValidateAndPreview = (e: React.FormEvent) => {
     e.preventDefault();
     if (!customerName.trim() || !whatsappNumber.trim() || !paymentTrxId.trim() || !screenshotUrl.trim()) {
-      setError('অনুগ্রহ করে আপনার নাম, হোয়াটসঅ্যাপ নাম্বার, TrxID দিন এবং পেমেন্ট স্ক্রিনশট আপলোড করুন।');
+      setError('অনুগ্রহ করে আপনার নাম, সঠিক হোয়াটসঅ্যাপ নাম্বার, TrxID এবং পেমেন্ট স্ক্রিনশট আপলোড করুন। কোনো তথ্য ফাঁকা রাখা যাবে না।');
+      setShowErrorPopup(true);
       return;
     }
     setError('');
@@ -317,6 +319,30 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderDraft, navigate
             </div>
           </form>
         </div>
+
+        {/* Error Popup Modal */}
+        {showErrorPopup && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
+            <div className="bg-[#0b101c] border border-red-500/40 text-white w-full max-w-sm rounded-3xl p-6 shadow-2xl text-center space-y-4 animate-in fade-in zoom-in duration-200">
+              <div className="w-14 h-14 bg-red-500/20 border border-red-500/40 rounded-2xl flex items-center justify-center mx-auto text-red-500 shadow-[0_0_20px_rgba(239,68,68,0.3)]">
+                <AlertCircle className="w-8 h-8" />
+              </div>
+              <div>
+                <h3 className="text-lg font-black uppercase tracking-tight text-red-400">তথ্য অসম্পূর্ণ বা ভুল!</h3>
+                <p className="text-xs text-neutral-300 mt-2 leading-relaxed">
+                  {error || 'অনুগ্রহ করে আপনার নাম, সঠিক হোয়াটসঅ্যাপ নাম্বার, TrxID এবং পেমেন্ট স্ক্রিনশট দিন।'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowErrorPopup(false)}
+                className="w-full py-3.5 bg-red-600 hover:bg-red-500 text-white font-black uppercase text-xs tracking-widest rounded-xl transition-all shadow-[0_0_15px_rgba(239,68,68,0.4)] cursor-pointer"
+              >
+                ঠিক আছে (OK)
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Confirmation Modal */}
         {showConfirmModal && (

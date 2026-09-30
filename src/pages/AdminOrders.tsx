@@ -126,15 +126,19 @@ export const AdminOrders: React.FC<AdminOrdersProps> = ({ currentRoute, navigate
     }
   };
 
-  const handleUpdateStatus = async (orderId: string, newStatus: Order['orderStatus']) => {
+  const handleUpdateStatus = async (orderId: string, newStatus: Order['orderStatus'], adminMsg?: string) => {
     try {
-      await updateDoc(doc(db, 'orders', orderId), {
+      const updatePayload: any = {
         orderStatus: newStatus,
         updatedAt: new Date().toISOString()
-      });
+      };
+      if (adminMsg !== undefined) {
+        updatePayload.adminMessage = adminMsg;
+      }
+      await updateDoc(doc(db, 'orders', orderId), updatePayload);
       fetchOrders();
       if (selectedOrder && selectedOrder.orderId === orderId) {
-        setSelectedOrder(prev => prev ? { ...prev, orderStatus: newStatus } : null);
+        setSelectedOrder(prev => prev ? { ...prev, orderStatus: newStatus, adminMessage: adminMsg !== undefined ? adminMsg : prev.adminMessage } : null);
       }
     } catch (err) {
       handleFirestoreError(err, OperationType.UPDATE, `orders/${orderId}`);
@@ -465,22 +469,37 @@ export const AdminOrders: React.FC<AdminOrdersProps> = ({ currentRoute, navigate
                   )}
                 </div>
 
-                {/* Status Changer */}
-                <div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-neutral-400 block mb-2">Update Order Status</span>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {(['PENDING', 'PROCESSING', 'COMPLETED', 'CANCELLED'] as const).map(status => {
-                      const isActive = selectedOrder.orderStatus === status;
-                      return (
-                        <button
-                          key={status}
-                          onClick={() => handleUpdateStatus(selectedOrder.orderId, status)}
-                          className={`py-2.5 px-3 rounded-xl text-xs font-black uppercase tracking-wider border transition-all ${isActive ? 'bg-white text-black border-white shadow-md' : 'bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-neutral-600 hover:text-white'}`}
-                        >
-                          {status}
-                        </button>
-                      );
-                    })}
+                {/* Status Changer & Admin Message */}
+                <div className="space-y-4 pt-2 border-t border-neutral-800">
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-neutral-400 block mb-1.5">
+                      Send Message to User (ইউজারের জন্য বার্তা / ভিআইপি কোড / নোট):
+                    </label>
+                    <textarea
+                      value={selectedOrder.adminMessage || ''}
+                      onChange={(e) => setSelectedOrder({ ...selectedOrder, adminMessage: e.target.value })}
+                      placeholder="এখানে আপনার ভিআইপি অ্যাক্টিভেশন কোড, ডাউনলোড লিংক অথবা রিজেক্ট হওয়ার কারণ লিখুন..."
+                      rows={3}
+                      className="w-full bg-black border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+
+                  <div>
+                    <span className="text-xs font-bold uppercase tracking-wider text-neutral-400 block mb-2">Update Order Status</span>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {(['PENDING', 'PROCESSING', 'COMPLETED', 'CANCELLED'] as const).map(status => {
+                        const isActive = selectedOrder.orderStatus === status;
+                        return (
+                          <button
+                            key={status}
+                            onClick={() => handleUpdateStatus(selectedOrder.orderId, status, selectedOrder.adminMessage)}
+                            className={`py-2.5 px-3 rounded-xl text-xs font-black uppercase tracking-wider border transition-all cursor-pointer ${isActive ? 'bg-white text-black border-white shadow-md' : 'bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-neutral-600 hover:text-white'}`}
+                          >
+                            {status}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>

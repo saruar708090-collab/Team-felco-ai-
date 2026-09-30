@@ -15,6 +15,7 @@ interface OrderSuccessProps {
 }
 
 export const OrderSuccess: React.FC<OrderSuccessProps> = ({ completedOrder, navigate, onOpenCustomerService, theme = 'dark', settings: propSettings }) => {
+  const [currentOrder, setCurrentOrder] = useState<Order | null>(completedOrder);
   const [liveStatus, setLiveStatus] = useState<Order['orderStatus']>(completedOrder?.orderStatus || 'PENDING');
   const [settings, setSettings] = useState<StoreSettings | null>(null);
   const [copied, setCopied] = useState(false);
@@ -30,6 +31,7 @@ export const OrderSuccess: React.FC<OrderSuccessProps> = ({ completedOrder, navi
       return;
     }
 
+    setCurrentOrder(completedOrder);
     setLiveStatus(completedOrder.orderStatus);
 
     if (completedOrder.orderStatus === 'COMPLETED') {
@@ -57,6 +59,7 @@ export const OrderSuccess: React.FC<OrderSuccessProps> = ({ completedOrder, navi
           });
         }
         setLiveStatus(data.orderStatus);
+        setCurrentOrder(data);
       }
     });
 
@@ -65,7 +68,7 @@ export const OrderSuccess: React.FC<OrderSuccessProps> = ({ completedOrder, navi
     };
   }, [completedOrder]);
 
-  if (!completedOrder) {
+  if (!currentOrder) {
     return null;
   }
 
@@ -73,7 +76,7 @@ export const OrderSuccess: React.FC<OrderSuccessProps> = ({ completedOrder, navi
   const isRejected = liveStatus === 'CANCELLED';
 
   const handleCopyOrderId = () => {
-    navigator.clipboard.writeText(completedOrder.orderId);
+    navigator.clipboard.writeText(currentOrder.orderId);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -173,8 +176,15 @@ export const OrderSuccess: React.FC<OrderSuccessProps> = ({ completedOrder, navi
           )}
           <div className="flex justify-between border-t border-neutral-800 pt-2 font-bold">
             <span className="text-neutral-400">Total Paid:</span>
-            <span className="text-emerald-400 font-mono text-sm">৳{completedOrder.finalAmount || 0}.00</span>
+            <span className="text-emerald-400 font-mono text-sm">৳{currentOrder.finalAmount || 0}.00</span>
           </div>
+
+          {currentOrder.adminMessage && (
+            <div className="mt-3 p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs space-y-1">
+              <span className="font-black text-emerald-400 uppercase tracking-wider block">💬 অ্যাডমিনের মেসেজ / ভিআইপি কোড:</span>
+              <p className="text-white font-mono whitespace-pre-line leading-relaxed">{currentOrder.adminMessage}</p>
+            </div>
+          )}
         </div>
 
         {/* Action Buttons */}

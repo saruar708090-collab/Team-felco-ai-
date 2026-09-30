@@ -36,6 +36,7 @@ export interface Order {
   couponCode?: string;
   discountAmount?: number;
   finalAmount?: number;
+  adminMessage?: string;
   createdAt: any;
   updatedAt?: any;
 }
