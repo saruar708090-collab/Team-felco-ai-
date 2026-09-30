@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { OrderDraft, Order } from '../types';
 import { db } from '../firebase';
 import { doc, setDoc } from 'firebase/firestore';
-import { ArrowRight, ArrowLeft, Upload, CheckCircle2, AlertCircle, ShieldCheck, Sparkles, Key, Check } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Upload, CheckCircle2, AlertCircle, ShieldCheck, Sparkles, Key, Check, MessageCircle, Phone } from 'lucide-react';
 import { useSEO } from '../hooks/useSEO';
 import { checkAndConsumePaymentSms } from '../utils/smsParser';
 
@@ -74,8 +74,8 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderDraft, navigate
 
   const handleValidateAndPreview = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customerName.trim() || !telegramId.trim() || !paymentTrxId.trim() || !screenshotUrl.trim()) {
-      setError('অনুগ্রহ করে আপনার নাম, টেলিগ্রাম ইউজারনেম, TrxID দিন এবং পেমেন্ট স্ক্রিনশট আপলোড করুন।');
+    if (!customerName.trim() || !whatsappNumber.trim() || !paymentTrxId.trim() || !screenshotUrl.trim()) {
+      setError('অনুগ্রহ করে আপনার নাম, হোয়াটসঅ্যাপ নাম্বার, TrxID দিন এবং পেমেন্ট স্ক্রিনশট আপলোড করুন।');
       return;
     }
     setError('');
@@ -95,9 +95,9 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderDraft, navigate
         productId: orderDraft.productId || 'unknown',
         productName: orderDraft.productName || 'Tool',
         selectedGame: orderDraft.selectedGame || 'HGNICE',
-        customerName,
-        telegramId,
-        whatsappNumber: whatsappNumber || '',
+        customerName: customerName.trim(),
+        telegramId: telegramId.trim() || 'N/A',
+        whatsappNumber: whatsappNumber.trim(),
         paymentMethod: orderDraft.paymentMethod || 'bKash',
         paymentTrxId: cleanTrxId,
         paymentScreenshotUrl: screenshotUrl,
@@ -135,7 +135,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderDraft, navigate
           </button>
           <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/25 px-3 py-1.5 rounded-xl">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="text-[11px] font-black uppercase tracking-wider text-emerald-400">Step 3 of 4 • Proof & TrxID</span>
+            <span className="text-[11px] font-black uppercase tracking-wider text-emerald-400">Step 3 of 4 • Proof & Info</span>
           </div>
         </div>
 
@@ -168,29 +168,52 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderDraft, navigate
         {/* Form Container */}
         <div className="bg-gradient-to-b from-[#0e1628] to-[#0a1020] border border-neutral-800 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4">
           <form onSubmit={handleValidateAndPreview} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-neutral-300">
+                Your Full Name (আপনার নাম) *
+              </label>
+              <input 
+                type="text"
+                value={customerName}
+                onChange={e => setCustomerName(e.target.value)}
+                placeholder="আপনার পুরো নাম লিখুন"
+                required
+                className="w-full bg-black/60 border border-neutral-800 rounded-xl px-4 py-3 text-xs sm:text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
+              />
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              {/* WhatsApp Number (Required) */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-neutral-300">Your Full Name (আপনার নাম) *</label>
+                <label className="text-xs font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                  <MessageCircle className="w-3.5 h-3.5 fill-emerald-400/20" />
+                  <span>WhatsApp Number *</span>
+                </label>
                 <input 
                   type="text"
-                  value={customerName}
-                  onChange={e => setCustomerName(e.target.value)}
-                  placeholder="আপনার পুরো নাম লিখুন"
+                  value={whatsappNumber}
+                  onChange={e => setWhatsappNumber(e.target.value)}
+                  placeholder="017XXXXXXXX বা +8801..."
                   required
-                  className="w-full bg-black/60 border border-neutral-800 rounded-xl px-4 py-3 text-xs sm:text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full bg-black/60 border border-emerald-500/40 rounded-xl px-4 py-3 text-xs sm:text-sm text-emerald-400 focus:outline-none focus:border-emerald-400 transition-colors font-mono font-bold placeholder:text-neutral-600"
                 />
+                <span className="text-[10px] text-neutral-400 block">এই নাম্বারে ভিআইপি কোড পাঠানো হবে</span>
               </div>
 
+              {/* Telegram Username / ID (Optional / Recommended) */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-blue-400">Telegram Username / ID *</label>
+                <label className="text-xs font-bold uppercase tracking-wider text-blue-400 flex items-center gap-1.5">
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Telegram Username / ID</span>
+                </label>
                 <input 
                   type="text"
                   value={telegramId}
                   onChange={e => setTelegramId(e.target.value)}
-                  placeholder="@username অথবা টেলিগ্রাম নাম্বার"
-                  required
-                  className="w-full bg-black/60 border border-blue-500/40 rounded-xl px-4 py-3 text-xs sm:text-sm text-white focus:outline-none focus:border-blue-400 transition-colors font-mono"
+                  placeholder="@username (যদি থাকে)"
+                  className="w-full bg-black/60 border border-blue-500/40 rounded-xl px-4 py-3 text-xs sm:text-sm text-white focus:outline-none focus:border-blue-400 transition-colors font-mono placeholder:text-neutral-600"
                 />
+                <span className="text-[10px] text-neutral-400 block">টেলিগ্রাম সাপোর্ট পেতে</span>
               </div>
             </div>
 
@@ -300,9 +323,15 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderDraft, navigate
                   <span className="font-bold">{customerName}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-400">Telegram Username / ID:</span>
-                  <span className="font-bold text-blue-400 font-mono">{telegramId}</span>
+                  <span className="text-neutral-400">WhatsApp Number:</span>
+                  <span className="font-bold text-emerald-400 font-mono">{whatsappNumber}</span>
                 </div>
+                {telegramId && telegramId !== 'N/A' && (
+                  <div className="flex justify-between">
+                    <span className="text-neutral-400">Telegram:</span>
+                    <span className="font-bold text-blue-400 font-mono">{telegramId}</span>
+                  </div>
+                )}
                 <div className="flex justify-between border-t border-neutral-800 pt-2">
                   <span className="text-neutral-400">Transaction ID (TrxID):</span>
                   <span className="font-mono font-black text-emerald-400 text-sm">{paymentTrxId.toUpperCase()}</span>

@@ -34,20 +34,64 @@ export interface Order {
   updatedAt?: any;
 }
 
+export interface GameItem {
+  id: string;
+  name: string;
+  type: 'colour_trading' | 'aviator' | 'other';
+  subtitle?: string;
+  active: boolean;
+  order?: number;
+  badgeBg?: string;
+  badgeText?: string;
+  logoUrl?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CustomPaymentMethod {
+  id: string;
+  name: string;
+  number: string;
+  accountType?: string; // 'Personal' | 'Agent' | 'Wallet' | 'TRC20 Address' | etc.
+  instructions?: string;
+  active: boolean;
+  offlineNotice?: string;
+  iconType?: 'bkash' | 'nagad' | 'rocket' | 'binance' | 'upay' | 'bank' | 'generic';
+  badgeColor?: string;
+}
+
 export interface StoreSettings {
   storeName: string;
+  logoUrl?: string;
+  siteTagline?: string;
+  heroBannerImage?: string;
+  heroBannerTitle?: string;
+  heroBannerSubtitle?: string;
+  trackOrderBannerTitle?: string;
+  trackOrderBannerSubtitle?: string;
+  feature1Title?: string;
+  feature1Desc?: string;
+  feature2Title?: string;
+  feature2Desc?: string;
+  feature3Title?: string;
+  feature3Desc?: string;
   supportWhatsApp?: string;
   supportTelegram: string;
   telegramChannelUrl?: string;
   telegramSupportUsername?: string;
   supportText: string;
   businessHours: string;
+  supportBannerImage?: string;
   bkashNumber: string;
   bkashActive?: boolean;
+  bkashOfflineNotice?: string;
   nagadNumber: string;
   nagadActive?: boolean;
+  nagadOfflineNotice?: string;
   rocketNumber: string;
   rocketActive?: boolean;
+  rocketOfflineNotice?: string;
+  customPaymentMethods?: CustomPaymentMethod[];
   autoVerifyEnabled?: boolean;
   paymentInstructions: string;
   scrollingNotice?: string;
@@ -57,6 +101,8 @@ export interface StoreSettings {
   popupNoticeImage?: string;
   popupNoticeButtonText?: string;
   popupNoticeButtonLink?: string;
+  footerAboutText?: string;
+  footerCopyrightText?: string;
   facebookUrl?: string;
   youtubeUrl?: string;
 }

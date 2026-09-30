@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Menu, X, Headphones, Sun, Moon, Shield } from 'lucide-react';
+import { StoreSettings } from '../types';
 
 interface NavbarProps {
   currentRoute: string;
@@ -8,6 +9,7 @@ interface NavbarProps {
   onOpenOrderTracker: () => void;
   theme: 'dark' | 'light';
   toggleTheme: () => void;
+  settings?: StoreSettings | null;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ 
@@ -16,9 +18,17 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenCustomerService, 
   onOpenOrderTracker,
   theme,
-  toggleTheme
+  toggleTheme,
+  settings
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const whatsAppLink = settings?.supportWhatsApp 
+    ? `https://wa.me/${settings.supportWhatsApp.replace(/[^0-9]/g, '')}`
+    : "https://wa.me/8801613562615";
+
+  const telegramLink = settings?.telegramChannelUrl || "https://t.me/+NRQwX88nKUQxYWY1";
+  const youtubeLink = settings?.youtubeUrl || "https://youtube.com/@teamfelco_78?si=y8LNiJ9C1MUsNA9Z";
 
   return (
     <header className="sticky top-0 z-40 bg-[#0d0d10] text-white border-b border-neutral-800/85 backdrop-blur-md bg-opacity-95 shadow-md">
@@ -28,12 +38,24 @@ export const Navbar: React.FC<NavbarProps> = ({
           onClick={() => navigate('/')} 
           className="cursor-pointer flex items-center space-x-2 group"
         >
-          <div className="w-7 h-7 bg-white text-black flex items-center justify-center font-black text-xs rounded shadow">
-            TF
-          </div>
+          {settings?.logoUrl ? (
+            <img 
+              src={settings.logoUrl} 
+              alt={settings.storeName || 'Store Logo'} 
+              className="w-8 h-8 rounded-lg object-contain bg-neutral-900 border border-neutral-800 shadow"
+            />
+          ) : (
+            <div className="w-7 h-7 bg-white text-black flex items-center justify-center font-black text-xs rounded shadow">
+              TF
+            </div>
+          )}
           <div>
-            <h1 className="font-black tracking-wider text-xs sm:text-sm block m-0">TEAM FELCO</h1>
-            <span className="text-[8px] uppercase tracking-widest text-emerald-400 block font-bold">Official Store</span>
+            <h1 className="font-black tracking-wider text-xs sm:text-sm block m-0 uppercase">
+              {settings?.storeName || 'TEAM FELCO'}
+            </h1>
+            <span className="text-[8px] uppercase tracking-widest text-emerald-400 block font-bold">
+              {settings?.siteTagline || 'Official Store'}
+            </span>
           </div>
         </div>
 
@@ -73,15 +95,13 @@ export const Navbar: React.FC<NavbarProps> = ({
             {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4 text-blue-400" />}
           </button>
 
-
-
           <div className="h-4 w-[1px] bg-neutral-800"></div>
 
           {/* WhatsApp, Telegram, YouTube separate icon buttons */}
           <div className="flex items-center space-x-2">
             {/* WhatsApp */}
             <a 
-              href="https://wa.me/8801613562615" 
+              href={whatsAppLink} 
               target="_blank" 
               rel="noreferrer"
               title="WhatsApp Support"
@@ -94,7 +114,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {/* Telegram */}
             <a 
-              href="https://t.me/+NRQwX88nKUQxYWY1" 
+              href={telegramLink} 
               target="_blank" 
               rel="noreferrer"
               title="Telegram Support"
@@ -107,7 +127,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {/* YouTube */}
             <a 
-              href="https://youtube.com/@teamfelco_78?si=y8LNiJ9C1MUsNA9Z" 
+              href={youtubeLink} 
               target="_blank" 
               rel="noreferrer"
               title="YouTube Channel"

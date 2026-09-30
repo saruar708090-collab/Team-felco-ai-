@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { OrderDraft, StoreSettings } from '../types';
 import { db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
-import { ArrowLeft, Check, Copy, CheckCircle2, AlertTriangle, Tag } from 'lucide-react';
+import { ArrowLeft, Check, Copy, CheckCircle2, AlertTriangle, Tag, Wallet } from 'lucide-react';
 import { useSEO } from '../hooks/useSEO';
 
 interface PaymentMethodProps {
@@ -33,10 +33,14 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({ orderDraft, setOrd
     businessHours: '24 Hours Active',
     bkashNumber: '01613562615',
     bkashActive: true,
+    bkashOfflineNotice: 'বিকাশ সার্ভার সাময়িক সময়ের জন্য বন্ধ রয়েছে। অনুগ্রহ করে নগদ অথবা রকেটে পেমেন্ট করুন।',
     nagadNumber: '01613562615',
     nagadActive: true,
+    nagadOfflineNotice: 'নগদ সার্ভার সাময়িক সময়ের জন্য বন্ধ রয়েছে। অনুগ্রহ করে বিকাশ অথবা রকেটে পেমেন্ট করুন।',
     rocketNumber: '01613562615',
     rocketActive: true,
+    rocketOfflineNotice: 'রকেট সার্ভার সাময়িক সময়ের জন্য বন্ধ রয়েছে। অনুগ্রহ করে বিকাশ অথবা নগদে পেমেন্ট করুন।',
+    customPaymentMethods: [],
     paymentInstructions: 'Send money to our personal number via Send Money.'
   });
   const [copied, setCopied] = useState(false);
@@ -103,13 +107,20 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({ orderDraft, setOrd
         const data = docSnap.data() as StoreSettings;
         setSettings(data);
 
-        const available: string[] = [];
-        if (data.bkashActive !== false && data.bkashNumber && data.bkashNumber.trim()) available.push('bKash');
-        if (data.nagadActive !== false && data.nagadNumber && data.nagadNumber.trim()) available.push('Nagad');
-        if (data.rocketActive !== false && data.rocketNumber && data.rocketNumber.trim()) available.push('Rocket');
+        // Auto select first active method if current is not active
+        const isBkashActive = data.bkashActive !== false && Boolean(data.bkashNumber && data.bkashNumber.trim());
+        const isNagadActive = data.nagadActive !== false && Boolean(data.nagadNumber && data.nagadNumber.trim());
+        const isRocketActive = data.rocketActive !== false && Boolean(data.rocketNumber && data.rocketNumber.trim());
 
-        if (available.length > 0) {
-          setPaymentMethod(available[0]);
+        if (isBkashActive) {
+          setPaymentMethod('bKash');
+        } else if (isNagadActive) {
+          setPaymentMethod('Nagad');
+        } else if (isRocketActive) {
+          setPaymentMethod('Rocket');
+        } else if (data.customPaymentMethods && data.customPaymentMethods.length > 0) {
+          const activeCustom = data.customPaymentMethods.find(c => c.active !== false);
+          if (activeCustom) setPaymentMethod(activeCustom.id);
         }
       }
     } catch {
@@ -117,13 +128,14 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({ orderDraft, setOrd
     }
   };
 
-  const paymentMethodsList = [
+  const standardMethods = [
     {
       id: 'bKash',
       label: 'Bkash Personal',
       bnName: 'বিকাশ',
       number: settings.bkashNumber,
       isActive: settings.bkashActive !== false && Boolean(settings.bkashNumber && settings.bkashNumber.trim()),
+      offlineNotice: settings.bkashOfflineNotice || 'বিকাশ পেমেন্ট বর্তমানে সাময়িক সময়ের জন্য বন্ধ রয়েছে। অনুগ্রহ করে নগদ অথবা রকেটে পেমেন্ট করুন।',
       renderLogo: () => (
         <div className="flex items-center justify-center select-none py-1">
           <svg className="w-10 h-10 shrink-0" viewBox="0 0 100 100" fill="none">
@@ -146,6 +158,7 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({ orderDraft, setOrd
       bnName: 'নগদ',
       number: settings.nagadNumber,
       isActive: settings.nagadActive !== false && Boolean(settings.nagadNumber && settings.nagadNumber.trim()),
+      offlineNotice: settings.nagadOfflineNotice || 'নগদ পেমেন্ট বর্তমানে সাময়িক সময়ের জন্য বন্ধ রয়েছে। অনুগ্রহ করে বিকাশ অথবা রকেটে পেমেন্ট করুন।',
       renderLogo: () => (
         <div className="flex items-center justify-center select-none py-1">
           <svg className="w-10 h-10 shrink-0" viewBox="0 0 100 100" fill="none">
@@ -189,6 +202,7 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({ orderDraft, setOrd
       bnName: 'রকেট',
       number: settings.rocketNumber,
       isActive: settings.rocketActive !== false && Boolean(settings.rocketNumber && settings.rocketNumber.trim()),
+      offlineNotice: settings.rocketOfflineNotice || 'রকেট পেমেন্ট বর্তমানে সাময়িক সময়ের জন্য বন্ধ রয়েছে। অনুগ্রহ করে বিকাশ অথবা নগদে পেমেন্ট করুন।',
       renderLogo: () => (
         <div className="flex items-center justify-center select-none py-1">
           <svg className="w-24 h-10 shrink-0 rounded-lg" viewBox="0 0 220 92" fill="none">
@@ -233,6 +247,24 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({ orderDraft, setOrd
     }
   ];
 
+  // Custom added payment methods
+  const customMethodsList = (settings.customPaymentMethods || []).map(cm => ({
+    id: cm.id,
+    label: `${cm.name} ${cm.accountType ? `(${cm.accountType})` : ''}`,
+    bnName: cm.name,
+    number: cm.number,
+    isActive: cm.active !== false && Boolean(cm.number && cm.number.trim()),
+    offlineNotice: cm.offlineNotice || `${cm.name} পেমেন্ট বর্তমানে সাময়িক সময়ের জন্য বন্ধ রয়েছে।`,
+    instructions: cm.instructions,
+    renderLogo: () => (
+      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center shadow">
+        <Wallet className="w-5 h-5" />
+      </div>
+    )
+  }));
+
+  const paymentMethodsList = [...standardMethods, ...customMethodsList];
+
   const selectedMethodObj = paymentMethodsList.find(m => m.id === paymentMethod) || paymentMethodsList[0];
 
   const handleCopyNumber = (num: string) => {
@@ -243,14 +275,14 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({ orderDraft, setOrd
   };
 
   const handleNext = () => {
-    if (!selectedMethodObj.isActive) return;
+    if (!selectedMethodObj || !selectedMethodObj.isActive) return;
     setOrderDraft(prev => ({
       ...prev,
       paymentMethod: selectedMethodObj.id,
       bkashNumber: settings.bkashNumber,
       nagadNumber: settings.nagadNumber,
       rocketNumber: settings.rocketNumber,
-      paymentInstructions: settings.paymentInstructions,
+      paymentInstructions: selectedMethodObj.instructions || settings.paymentInstructions,
       couponCode: couponSuccess ? couponInput.toUpperCase().trim() : undefined,
       discountAmount: discountAmount,
       finalAmount: finalAmount
@@ -260,7 +292,7 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({ orderDraft, setOrd
 
   return (
     <div className="min-h-screen bg-[#07090e] text-white py-6 px-3 sm:px-6 flex flex-col items-center justify-center">
-      <div className="w-full max-w-sm space-y-3">
+      <div className="w-full max-w-md space-y-3">
         {/* Top Back Navigation */}
         <div className="flex items-center justify-between px-1">
           <button
@@ -284,39 +316,55 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({ orderDraft, setOrd
             </h1>
           </div>
 
-          {/* Clean 3-Column Payment Cards Grid */}
-          <div className="grid grid-cols-3 gap-2">
+          {/* Clean Payment Cards Grid */}
+          <div className={`grid gap-2 ${paymentMethodsList.length > 3 ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-3'}`}>
             {paymentMethodsList.map(m => {
               const isSelected = paymentMethod === m.id;
+              const isOffline = !m.isActive;
+
               return (
                 <div
                   key={m.id}
                   onClick={() => setPaymentMethod(m.id)}
-                  className={`relative cursor-pointer rounded-2xl bg-white border-2 p-2.5 flex flex-col items-center justify-between min-h-[92px] transition-all duration-150 ${
+                  className={`relative cursor-pointer rounded-2xl border-2 p-2.5 flex flex-col items-center justify-between min-h-[96px] transition-all duration-150 ${
                     isSelected
-                      ? 'border-[#1D4ED8] shadow-md ring-2 ring-[#2563EB]/20 bg-blue-50/10'
-                      : 'border-slate-200/80 hover:border-slate-300 shadow-sm'
+                      ? isOffline
+                        ? 'border-red-500 ring-2 ring-red-400/20 bg-red-50/40 shadow-md'
+                        : 'border-[#1D4ED8] shadow-md ring-2 ring-[#2563EB]/20 bg-blue-50/10'
+                      : isOffline
+                        ? 'border-red-200/80 bg-red-50/20 hover:border-red-300 opacity-75'
+                        : 'border-slate-200/80 hover:border-slate-300 shadow-sm bg-white'
                   }`}
                 >
-                  {/* Top-Right LIVE Red Badge */}
-                  <span className="absolute top-1.5 right-1.5 bg-[#DC2626] text-white text-[7.5px] font-black uppercase px-1.5 py-0.5 rounded-full tracking-wider leading-none shadow-sm">
-                    LIVE
-                  </span>
+                  {/* Status Badge: LIVE or সাময়িক বন্ধ */}
+                  {isOffline ? (
+                    <span className="absolute top-1.5 right-1.5 bg-red-600 text-white text-[7px] font-black uppercase px-1.5 py-0.5 rounded-full tracking-wider leading-none shadow-sm">
+                      সাময়িক বন্ধ
+                    </span>
+                  ) : (
+                    <span className="absolute top-1.5 right-1.5 bg-[#DC2626] text-white text-[7.5px] font-black uppercase px-1.5 py-0.5 rounded-full tracking-wider leading-none shadow-sm">
+                      LIVE
+                    </span>
+                  )}
 
-                  {/* Top-Left Selected Blue Checkmark */}
+                  {/* Top-Left Selected Checkmark */}
                   {isSelected && (
-                    <div className="absolute top-1.5 left-1.5 w-3.5 h-3.5 rounded-full bg-[#1D4ED8] text-white flex items-center justify-center shadow">
+                    <div className={`absolute top-1.5 left-1.5 w-3.5 h-3.5 rounded-full text-white flex items-center justify-center shadow ${
+                      isOffline ? 'bg-red-600' : 'bg-[#1D4ED8]'
+                    }`}>
                       <Check className="w-2 h-2 stroke-[3]" />
                     </div>
                   )}
 
                   {/* Logo */}
-                  <div className="my-auto">
+                  <div className={`my-auto ${isOffline ? 'opacity-50 grayscale-[40%]' : ''}`}>
                     {m.renderLogo()}
                   </div>
 
                   {/* Method Name Text Underneath */}
-                  <span className="text-[10px] font-bold text-slate-800 tracking-tight mt-1 text-center">
+                  <span className={`text-[10px] font-bold tracking-tight mt-1 text-center line-clamp-1 ${
+                    isOffline ? 'text-red-700' : 'text-slate-800'
+                  }`}>
                     {m.label}
                   </span>
                 </div>
@@ -324,7 +372,7 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({ orderDraft, setOrd
             })}
           </div>
 
-          {/* Number & Copy Instruction Box */}
+          {/* Number & Copy Instruction Box or Offline Alert */}
           {selectedMethodObj.isActive ? (
             <div className="bg-slate-100 border border-slate-200 rounded-xl p-3 space-y-2">
               <div className="flex items-center justify-between">
@@ -344,14 +392,19 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({ orderDraft, setOrd
                   <span>{copied ? 'Copied' : 'Copy'}</span>
                 </button>
               </div>
-              <p className="text-[10px] text-slate-500 border-t border-slate-200 pt-1.5 leading-relaxed">
-                {settings.paymentInstructions || 'এই নাম্বারে সেন্ড মানি করে নিচে Pay বাটনে ক্লিক করুন।'}
+              <p className="text-[10px] text-slate-600 border-t border-slate-200 pt-1.5 leading-relaxed">
+                {selectedMethodObj.instructions || settings.paymentInstructions || 'এই নাম্বারে সেন্ড মানি করে নিচে Pay বাটনে ক্লিক করুন।'}
               </p>
             </div>
           ) : (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-red-600 text-[11px] flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 shrink-0" />
-              <span>বর্তমানে {selectedMethodObj.label}-এ পেমেন্ট বন্ধ আছে। অন্য মাধ্যম সিলেক্ট করুন।</span>
+            <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-red-700 text-xs space-y-1">
+              <div className="flex items-center gap-1.5 font-black text-red-800 uppercase tracking-wide text-[11px]">
+                <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
+                <span>পেমেন্ট সাময়িক সময়ের জন্য বন্ধ</span>
+              </div>
+              <p className="text-[11px] leading-relaxed text-red-600">
+                {selectedMethodObj.offlineNotice || `দুঃখিত! ${selectedMethodObj.label} পেমেন্ট বর্তমানে সাময়িক সময়ের জন্য বন্ধ রয়েছে। অনুগ্রহ করে চালু থাকা অন্য মাধ্যমে পেমেন্ট করুন।`}
+              </p>
             </div>
           )}
 
@@ -395,7 +448,9 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({ orderDraft, setOrd
                 : 'bg-slate-300 text-slate-500 cursor-not-allowed'
             }`}
           >
-            <span>Pay ৳{finalAmount}.00</span>
+            <span>
+              {selectedMethodObj.isActive ? `Pay ৳${finalAmount}.00` : '🚫 এই মাধ্যমে পেমেন্ট সাময়িক বন্ধ'}
+            </span>
           </button>
         </div>
       </div>

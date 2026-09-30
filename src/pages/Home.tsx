@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Product, OrderDraft } from '../types';
 import { db } from '../firebase';
 import { collection, getDocs } from 'firebase/firestore';
-import { ArrowRight, Search, ShieldCheck, Star, Gamepad2, X } from 'lucide-react';
+import { ArrowRight, Search, ShieldCheck, Star, Gamepad2, X, Flame, Sparkles } from 'lucide-react';
 import { ProductReviewsModal } from '../components/ProductReviewsModal';
 import { useSEO } from '../hooks/useSEO';
 
@@ -23,6 +23,8 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [viewingProductDetails, setViewingProductDetails] = useState<Product | null>(null);
 
+  const [customGames, setCustomGames] = useState<string[]>([]);
+
   // Dynamic SEO tag management based on currently viewed product details
   useSEO({
     title: viewingProductDetails 
@@ -36,7 +38,12 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
     youtubeUrl: viewingProductDetails?.youtubeUrl
   });
 
-  const categories = ['All', 'Colour Trading Hack', 'Aviator Hack', 'HGNICE', 'DKWIN', 'BDWIN', '1X BET', 'CK444'];
+  const categories = React.useMemo(() => {
+    const base = ['All', 'Colour Trading Hack', 'Aviator Hack'];
+    const productCats = products.map(p => p.category).filter(Boolean) as string[];
+    const all = Array.from(new Set([...base, ...customGames, ...productCats]));
+    return all;
+  }, [products, customGames]);
 
   const defaultProducts: Product[] = [
     {
@@ -61,6 +68,26 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
 
   useEffect(() => {
     fetchProducts();
+    const fetchGames = async () => {
+      try {
+        const snap = await getDocs(collection(db, 'games'));
+        const gameNames: string[] = [];
+        snap.forEach(d => {
+          const data = d.data();
+          if (data.active !== false && data.name) {
+            gameNames.push(data.name);
+          }
+        });
+        if (gameNames.length > 0) {
+          setCustomGames(gameNames);
+        } else {
+          setCustomGames(['HGNICE', 'DKWIN', 'BDWIN', '1X BET', 'CK444']);
+        }
+      } catch {
+        setCustomGames(['HGNICE', 'DKWIN', 'BDWIN', '1X BET', 'CK444']);
+      }
+    };
+    fetchGames();
   }, []);
 
   const fetchProducts = async () => {
@@ -194,13 +221,17 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
               <ShieldCheck className="w-4 h-4" />
             </div>
             <div>
-              <h2 className={`text-xs sm:text-sm font-black uppercase tracking-wider ${isLight ? 'text-neutral-900' : 'text-white'}`}>Track Order</h2>
-              <p className={`text-[11px] ${isLight ? 'text-neutral-500' : 'text-neutral-400'}`}>Check status instantly with TrxID or Order ID.</p>
+              <h2 className={`text-xs sm:text-sm font-black uppercase tracking-wider ${isLight ? 'text-neutral-900' : 'text-white'}`}>
+                {settings?.trackOrderBannerTitle || 'Track Order'}
+              </h2>
+              <p className={`text-[11px] ${isLight ? 'text-neutral-500' : 'text-neutral-400'}`}>
+                {settings?.trackOrderBannerSubtitle || 'Check status instantly with TrxID or Order ID.'}
+              </p>
             </div>
           </div>
           <button
             onClick={onOpenOrderTracker}
-            className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-400 text-black px-4 py-2 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 shadow-md shrink-0"
+            className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-400 text-black px-4 py-2 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 shadow-md shrink-0 cursor-pointer"
           >
             <Search className="w-3.5 h-3.5" />
             <span>Track Order</span>
@@ -244,18 +275,31 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
             {filteredProducts.map(product => {
-              const hasDiscount = product.originalPrice && product.originalPrice > product.price;
+              const hasDiscount = !!(product.originalPrice && product.originalPrice > product.price);
               const discountPercent = hasDiscount 
                 ? Math.round(((product.originalPrice! - product.price) / product.originalPrice!) * 100) 
                 : 0;
 
+              const isRecent = (() => {
+                if (!product.createdAt) return false;
+                try {
+                  const createdTime = new Date(product.createdAt).getTime();
+                  if (isNaN(createdTime)) return false;
+                  const now = Date.now();
+                  const fourteenDaysMs = 14 * 24 * 60 * 60 * 1000;
+                  return now - createdTime < fourteenDaysMs;
+                } catch {
+                  return false;
+                }
+              })();
+
               return (
                 <div 
                   key={product.id}
-                  className={`group border rounded-2xl overflow-hidden flex flex-col justify-between transition-all duration-300 relative ${
+                  className={`group border rounded-2xl overflow-hidden flex flex-col justify-between transition-all duration-300 ease-out transform hover:-translate-y-1.5 relative ${
                     isLight 
-                      ? 'bg-white border-slate-200 shadow-sm hover:shadow-md hover:border-emerald-400' 
-                      : 'bg-[#121214] border-neutral-800/80 shadow-md hover:border-emerald-500/50 hover:shadow-emerald-500/5'
+                      ? 'bg-white border-slate-200 shadow-sm hover:border-emerald-500 hover:shadow-[0_16px_35px_rgba(16,185,129,0.18)] hover:ring-1 hover:ring-emerald-500/25' 
+                      : 'bg-[#121214] border-neutral-800/80 shadow-md hover:border-emerald-500/60 hover:shadow-[0_16px_40px_rgba(16,185,129,0.22)] hover:ring-1 hover:ring-emerald-500/35'
                   }`}
                 >
                   <div 
@@ -275,9 +319,26 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
                       
                       <img 
                         src={product.imageUrl || 'https://images.unsplash.com/photo-1642543492481-44e81e3914a7?w=800&auto=format&fit=crop&q=60'} 
-                        alt={product.name}
+                        alt={product.name} 
                         className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${product.soldOut ? 'opacity-30 grayscale' : ''}`}
                       />
+
+                      {/* Top-Left Visual Badges: Sale & New */}
+                      <div className="absolute top-2 left-2 flex flex-col sm:flex-row gap-1 z-10 pointer-events-none">
+                        {hasDiscount && !product.soldOut && (
+                          <span className="bg-gradient-to-r from-rose-600 via-red-500 to-amber-500 text-white font-black text-[9px] sm:text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-md shadow-lg shadow-red-600/40 flex items-center gap-1 border border-white/15">
+                            <Flame className="w-2.5 h-2.5 shrink-0 fill-current animate-pulse text-amber-200" />
+                            <span>SALE</span>
+                          </span>
+                        )}
+
+                        {isRecent && !product.soldOut && (
+                          <span className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-black text-[9px] sm:text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-md shadow-lg shadow-cyan-500/40 flex items-center gap-1 border border-white/15">
+                            <Sparkles className="w-2.5 h-2.5 shrink-0 text-cyan-200" />
+                            <span>NEW</span>
+                          </span>
+                        )}
+                      </div>
 
                       {/* Floating Price Badge (Top-Right) */}
                       <div className="absolute top-2 right-2 bg-black/85 backdrop-blur-md px-2 py-1 rounded-lg border border-neutral-700/60 shadow-lg text-right z-10">
@@ -370,9 +431,34 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
             {/* Header */}
             <div className={`flex items-center justify-between mb-6 shrink-0 border-b pb-4 ${isLight ? 'border-slate-100' : 'border-neutral-800'}`}>
               <div>
-                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-500 border border-emerald-500/30">
-                  {viewingProductDetails.category || 'HGNICE'}
-                </span>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-500 border border-emerald-500/30">
+                    {viewingProductDetails.category || 'HGNICE'}
+                  </span>
+                  {viewingProductDetails.originalPrice && viewingProductDetails.originalPrice > viewingProductDetails.price && !viewingProductDetails.soldOut && (
+                    <span className="bg-gradient-to-r from-rose-600 to-amber-500 text-white font-black text-[9px] uppercase tracking-wider px-2 py-0.5 rounded shadow flex items-center gap-1">
+                      <Flame className="w-2.5 h-2.5 fill-current text-amber-200" />
+                      <span>SALE</span>
+                    </span>
+                  )}
+                  {(() => {
+                    if (!viewingProductDetails.createdAt || viewingProductDetails.soldOut) return null;
+                    try {
+                      const cTime = new Date(viewingProductDetails.createdAt).getTime();
+                      if (!isNaN(cTime) && Date.now() - cTime < 14 * 24 * 60 * 60 * 1000) {
+                        return (
+                          <span className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-black text-[9px] uppercase tracking-wider px-2 py-0.5 rounded shadow flex items-center gap-1">
+                            <Sparkles className="w-2.5 h-2.5 text-cyan-200" />
+                            <span>NEW</span>
+                          </span>
+                        );
+                      }
+                    } catch {
+                      // ignore
+                    }
+                    return null;
+                  })()}
+                </div>
                 <h3 className={`text-base sm:text-lg font-black uppercase tracking-tight mt-1.5 ${isLight ? 'text-neutral-900' : 'text-white'}`}>
                   {viewingProductDetails.name}
                 </h3>

@@ -15,6 +15,8 @@ import { AdminOrders } from './pages/AdminOrders';
 import { AdminPaymentSettings } from './pages/AdminPaymentSettings';
 import { AdminCustomerService } from './pages/AdminCustomerService';
 import { AdminCoupons } from './pages/AdminCoupons';
+import { AdminGames } from './pages/AdminGames';
+import { AdminSiteCustomizer } from './pages/AdminSiteCustomizer';
 import { OrderDraft, Order, StoreSettings } from './types';
 import { db, auth } from './firebase';
 import { doc, getDoc } from 'firebase/firestore';
@@ -165,10 +167,14 @@ export default function App() {
         return <AdminDashboard currentRoute={currentRoute} navigate={navigate} />;
       case '/admin/products':
         return <AdminProducts currentRoute={currentRoute} navigate={navigate} />;
+      case '/admin/games':
+        return <AdminGames currentRoute={currentRoute} navigate={navigate} />;
       case '/admin/orders':
         return <AdminOrders currentRoute={currentRoute} navigate={navigate} />;
       case '/admin/payment-settings':
         return <AdminPaymentSettings currentRoute={currentRoute} navigate={navigate} />;
+      case '/admin/site-customizer':
+        return <AdminSiteCustomizer currentRoute={currentRoute} navigate={navigate} />;
       case '/admin/customer-service':
         return <AdminCustomerService currentRoute={currentRoute} navigate={navigate} />;
       case '/admin/coupons':
@@ -200,6 +206,7 @@ export default function App() {
           onOpenOrderTracker={() => setIsOrderTrackerOpen(true)}
           theme={theme}
           toggleTheme={toggleTheme}
+          settings={settings}
         />
       )}
 
@@ -267,11 +274,11 @@ export default function App() {
           {!isSecretPortal && !globalLoading && !isPopupDismissed && settings?.popupNoticeActive && (settings?.popupNoticeImage || settings?.popupNoticeText || settings?.popupNoticeTitle) && (
             <div
               onClick={() => setIsPopupDismissed(true)}
-              className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn"
+              className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-modal-backdrop"
             >
               <div
                 onClick={e => e.stopPropagation()}
-                className="relative w-full max-w-md rounded-[28px] overflow-hidden border-2 border-blue-500/40 bg-gradient-to-b from-[#0f172a] via-[#0b0f19] to-[#06080F] text-white shadow-[0_25px_70px_rgba(0,0,0,0.85)] flex flex-col max-h-[90vh]"
+                className="relative w-full max-w-md rounded-[28px] overflow-hidden border-2 border-blue-500/40 bg-gradient-to-b from-[#0f172a] via-[#0b0f19] to-[#06080F] text-white shadow-[0_25px_70px_rgba(0,0,0,0.85)] flex flex-col max-h-[90vh] animate-spring-modal"
               >
                 {/* Instant Close (X) Button */}
                 <button
