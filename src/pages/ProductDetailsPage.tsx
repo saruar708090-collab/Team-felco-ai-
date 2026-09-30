@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Product, OrderDraft, StoreSettings } from '../types';
 import { db } from '../firebase';
 import { collection, doc, getDoc, getDocs } from 'firebase/firestore';
-import { ArrowLeft, ArrowRight, Download, Sparkles, Flame, ShieldCheck, Star, Play, CheckCircle2, Share2, HelpCircle, ExternalLink, Zap, Lock } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Download, Sparkles, Flame, ShieldCheck, Star, Play, CheckCircle2, Share2, HelpCircle, ExternalLink, Zap, Lock, Send, MessageSquare, CheckCircle, Video } from 'lucide-react';
 import { useSEO } from '../hooks/useSEO';
 import { ProductReviewsModal } from '../components/ProductReviewsModal';
 
@@ -490,6 +490,133 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                 <span className="text-[11px] font-bold">24/7 VIP Support</span>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* 🛡️ HACK PROOF & VERIFICATION SECTION (হ্যাকের প্রুফ ও ভেরিফিকেশন - ইউটিউব ও টেলিগ্রাম) */}
+        <div className={`border rounded-3xl p-5 sm:p-8 shadow-2xl transition-all relative overflow-hidden ${
+          isLight ? 'bg-white border-slate-200' : 'bg-[#0f0f14] border-neutral-800/90'
+        }`}>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-blue-500/10 via-red-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-neutral-800/60">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-red-600 to-blue-500 p-0.5 shadow-lg shadow-blue-500/20">
+                <div className="w-full h-full bg-black rounded-[14px] flex items-center justify-center">
+                  <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                </div>
+              </div>
+              <div>
+                <h3 className="text-base sm:text-lg font-black uppercase tracking-tight text-white flex items-center gap-2">
+                  <span>হ্যাকের লাইভ প্রুফ ও ভেরিফিকেশন</span>
+                  <span className="text-[10px] bg-emerald-500 text-black font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    ১০০% প্রুভেন
+                  </span>
+                </h3>
+                <p className="text-xs text-neutral-400 mt-0.5">
+                  অর্ডার করার পূর্বে আমাদের ইউটিউব এবং টেলিগ্রাম চ্যানেলে সরাসরি উইনিং প্রমাণ দেখুন
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            {/* 🔴 YOUTUBE PROOF CARD */}
+            <div className={`p-5 rounded-2xl border flex flex-col justify-between transition-all hover:border-red-500/40 relative overflow-hidden group ${
+              isLight ? 'bg-slate-50 border-slate-200' : 'bg-neutral-950/80 border-neutral-800/90'
+            }`}>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-red-600 flex items-center justify-center text-white shadow-md shadow-red-600/30 group-hover:scale-105 transition-transform">
+                      <Play className="w-4 h-4 fill-current ml-0.5" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black uppercase text-red-500 tracking-tight">YouTube Proof Video</h4>
+                      <span className="text-[10px] text-neutral-400">লাইভ ভিডিও প্রুফ ও সেটআপ গাইড</span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-black uppercase text-red-400 bg-red-500/10 px-2 py-0.5 rounded-md border border-red-500/20">
+                    LIVE DEMO
+                  </span>
+                </div>
+
+                <p className="text-xs text-neutral-400 leading-relaxed">
+                  ইউটিউবে আমাদের চ্যানেলে এই হ্যাক টুলের সরাসরি লাইভ উইনিং এবং কার্যকারিতা রেকর্ড করা আছে।
+                </p>
+              </div>
+
+              <div className="pt-4 mt-2">
+                <a
+                  href={product.youtubeUrl || settings?.youtubeUrl || 'https://www.youtube.com'}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full py-3 bg-red-600 hover:bg-red-500 text-white font-black uppercase text-xs tracking-wider rounded-xl transition-all shadow-lg shadow-red-600/25 flex items-center justify-center gap-2 cursor-pointer group-hover:shadow-red-600/40 active:scale-98"
+                >
+                  <Play className="w-4 h-4 fill-current" />
+                  <span>ইউটিউব প্রুফ ভিডিও দেখুন</span>
+                  <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+                </a>
+              </div>
+            </div>
+
+            {/* ✈️ TELEGRAM PROOF CARD */}
+            <div className={`p-5 rounded-2xl border flex flex-col justify-between transition-all hover:border-blue-500/40 relative overflow-hidden group ${
+              isLight ? 'bg-slate-50 border-slate-200' : 'bg-neutral-950/80 border-neutral-800/90'
+            }`}>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-[#229ED9] flex items-center justify-center text-white shadow-md shadow-blue-500/30 group-hover:scale-105 transition-transform">
+                      <Send className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black uppercase text-[#229ED9] tracking-tight">Telegram Proof Channel</h4>
+                      <span className="text-[10px] text-neutral-400">প্রতিদিনের উইনিং স্ক্রিনশট ও ফিডব্যাক</span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-black uppercase text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-md border border-blue-500/20">
+                    REAL PROOF
+                  </span>
+                </div>
+
+                <p className="text-xs text-neutral-400 leading-relaxed">
+                  আমাদের অফিসিয়াল টেলিগ্রাম চ্যানেলে মেম্বারদের লাইভ উইনিং স্ক্রিনশট ও প্রুফ নিয়মিত শেয়ার করা হয়।
+                </p>
+              </div>
+
+              <div className="pt-4 mt-2">
+                <a
+                  href={product.telegramProofUrl || settings?.telegramChannelUrl || settings?.supportTelegram || 'https://t.me'}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full py-3 bg-[#229ED9] hover:bg-[#1e8bc0] text-white font-black uppercase text-xs tracking-wider rounded-xl transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 cursor-pointer group-hover:shadow-blue-500/40 active:scale-98"
+                >
+                  <Send className="w-4 h-4" />
+                  <span>টেলিগ্রাম প্রুফ চ্যানেল দেখুন</span>
+                  <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+                </a>
+              </div>
+            </div>
+
+          </div>
+
+          <div className="mt-4 p-3.5 rounded-xl bg-neutral-950 border border-neutral-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+            <div className="flex items-center gap-2 text-xs text-neutral-400">
+              <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>কোনো প্রশ্ন বা ডাউট থাকলে সরাসরি আমাদের টেলিগ্রাম বা হোয়াটসঅ্যাপ সাপোর্টে কথা বলুন।</span>
+            </div>
+            {settings?.supportWhatsApp && (
+              <a
+                href={`https://wa.me/${settings.supportWhatsApp.replace(/[^0-9]/g, '')}`}
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs font-bold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 shrink-0 transition-colors"
+              >
+                <span>হোয়াটসঅ্যাপে প্রুফ চান →</span>
+              </a>
+            )}
           </div>
         </div>
 

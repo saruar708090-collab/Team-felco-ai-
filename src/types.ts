@@ -4,6 +4,7 @@ export interface Product {
   description?: string;
   detailedDescription?: string;
   youtubeUrl?: string;
+  telegramProofUrl?: string;
   price: number;
   originalPrice?: number;
   imageUrl: string;

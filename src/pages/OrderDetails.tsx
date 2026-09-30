@@ -96,6 +96,9 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderDraft, navigate
       const cleanTrxId = paymentTrxId.trim().toUpperCase();
       const finalPayable = orderDraft.finalAmount || orderDraft.productPrice || 0;
 
+      // Optional SMS verification check (if exists)
+      const isSmsVerified = await checkAndConsumePaymentSms(cleanTrxId, finalPayable, orderId);
+
       const newOrder: Order = {
         orderId,
         productId: orderDraft.productId || 'unknown',
@@ -107,7 +110,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderDraft, navigate
         paymentMethod: orderDraft.paymentMethod || 'bKash',
         paymentTrxId: cleanTrxId,
         paymentScreenshotUrl: screenshotUrl,
-        orderStatus: 'PENDING',
+        orderStatus: isSmsVerified ? 'COMPLETED' : 'PENDING',
         couponCode: orderDraft.couponCode || '',
         discountAmount: orderDraft.discountAmount || 0,
         finalAmount: finalPayable,
@@ -115,7 +118,6 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderDraft, navigate
       };
 
       await setDoc(doc(db, 'orders', orderId), newOrder);
-
       setCompletedOrder(newOrder);
       navigate('/order/success');
     } catch (err: any) {

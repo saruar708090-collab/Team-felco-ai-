@@ -434,19 +434,31 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
                       </button>
                     )}
 
-                    <button
-                      onClick={() => setSelectedProduct(product)}
-                      className={`w-full py-1.5 px-2 text-[10px] rounded-lg transition-all flex items-center justify-center gap-1.5 border group/rev active:scale-[0.98] cursor-pointer ${
-                        isLight 
-                          ? 'bg-slate-50 border-slate-200 text-neutral-600 hover:bg-amber-50 hover:border-amber-300 hover:text-amber-800' 
-                          : 'bg-neutral-900/60 border-neutral-800/80 text-neutral-400 hover:bg-neutral-850 hover:border-amber-500/30 hover:text-neutral-200'
-                      }`}
-                    >
-                      <Star className="w-3 h-3 text-amber-400 fill-current shrink-0 group-hover/rev:scale-110 transition-transform" />
-                      <span className="font-bold text-amber-400">4.9</span>
-                      <span className="text-neutral-500 text-[9px]">•</span>
-                      <span className="font-medium tracking-wide">Customer Reviews</span>
-                    </button>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <button
+                        onClick={() => setViewingProductDetails(product)}
+                        className={`py-1.5 px-2 text-[10px] font-bold rounded-lg transition-all flex items-center justify-center gap-1 border active:scale-[0.98] cursor-pointer ${
+                          isLight 
+                            ? 'bg-emerald-50 border-emerald-200 text-emerald-800 hover:bg-emerald-100' 
+                            : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20'
+                        }`}
+                      >
+                        <span>বিস্তারিত ও প্রুফ</span>
+                      </button>
+
+                      <button
+                        onClick={() => setSelectedProduct(product)}
+                        className={`py-1.5 px-2 text-[10px] rounded-lg transition-all flex items-center justify-center gap-1 border group/rev active:scale-[0.98] cursor-pointer ${
+                          isLight 
+                            ? 'bg-slate-50 border-slate-200 text-neutral-600 hover:bg-amber-50 hover:border-amber-300' 
+                            : 'bg-neutral-900/60 border-neutral-800/80 text-neutral-400 hover:bg-neutral-850'
+                        }`}
+                      >
+                        <Star className="w-3 h-3 text-amber-400 fill-current shrink-0" />
+                        <span className="font-bold text-amber-400">4.9</span>
+                        <span className="font-medium">রিভিউ</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               );

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { OrderDraft, StoreSettings } from '../types';
-import { db } from '../firebase';
-import { doc, getDoc } from 'firebase/firestore';
-import { ArrowLeft, Check, Copy, CheckCircle2, AlertTriangle, Tag, ShieldCheck } from 'lucide-react';
+import { db, auth } from '../firebase';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { ArrowLeft, Check, Copy, CheckCircle2, AlertTriangle, Tag, ShieldCheck, Wallet } from 'lucide-react';
 import { useSEO } from '../hooks/useSEO';
 
 interface PaymentMethodProps {
@@ -46,6 +46,7 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({ orderDraft, setOrd
     paymentInstructions: 'Send money to our personal number via Send Money.'
   });
   const [copied, setCopied] = useState(false);
+
 
   // Coupon States
   const [couponInput, setCouponInput] = useState('');

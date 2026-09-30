@@ -68,6 +68,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             Home
           </button>
 
+
+
           {/* Track Order Button */}
           <button 
             onClick={onOpenOrderTracker}
