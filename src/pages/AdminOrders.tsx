@@ -387,17 +387,19 @@ export const AdminOrders: React.FC<AdminOrdersProps> = ({ currentRoute, navigate
                   <div>
                     <span className="text-neutral-500 block mb-0.5">WhatsApp Number</span>
                     <div className="flex items-center gap-2">
-                      <span className="font-bold">{selectedOrder.whatsappNumber}</span>
-                      <a
-                        href={`https://wa.me/${selectedOrder.whatsappNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
-                          `হ্যালো ${selectedOrder.customerName}! Team Felco থেকে আপনার #${selectedOrder.orderId} (${selectedOrder.productName} - ${selectedOrder.selectedGame}) অর্ডারটি এপ্রুভ করা হয়েছে। এই নিন আপনার ভিআইপি কোড:`
-                        )}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="px-2 py-0.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded text-[10px] font-bold"
-                      >
-                        Chat on WhatsApp
-                      </a>
+                      <span className="font-bold">{selectedOrder.whatsappNumber || 'N/A'}</span>
+                      {selectedOrder.whatsappNumber && (
+                        <a
+                          href={`https://wa.me/${selectedOrder.whatsappNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
+                            `হ্যালো ${selectedOrder.customerName}! Team Felco থেকে আপনার #${selectedOrder.orderId} (${selectedOrder.productName} - ${selectedOrder.selectedGame}) অর্ডারটি এপ্রুভ করা হয়েছে। এই নিন আপনার ভিআইপি কোড:`
+                          )}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-2 py-0.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded text-[10px] font-bold"
+                        >
+                          Chat on WhatsApp
+                        </a>
+                      )}
                     </div>
                   </div>
                   <div>

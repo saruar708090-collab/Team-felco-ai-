@@ -170,13 +170,13 @@ export default function App() {
           />
         );
       case '/order/game':
-        return <GameSelect orderDraft={orderDraft} setOrderDraft={setOrderDraft} navigate={navigate} />;
+        return <GameSelect orderDraft={orderDraft} setOrderDraft={setOrderDraft} navigate={navigate} theme={theme} settings={settings} />;
       case '/order/payment':
-        return <PaymentMethod orderDraft={orderDraft} setOrderDraft={setOrderDraft} navigate={navigate} />;
+        return <PaymentMethod orderDraft={orderDraft} setOrderDraft={setOrderDraft} navigate={navigate} theme={theme} settings={settings} />;
       case '/order/details':
-        return <OrderDetails orderDraft={orderDraft} navigate={navigate} setCompletedOrder={setCompletedOrder} />;
+        return <OrderDetails orderDraft={orderDraft} navigate={navigate} setCompletedOrder={setCompletedOrder} theme={theme} settings={settings} />;
       case '/order/success':
-        return <OrderSuccess completedOrder={completedOrder} navigate={navigate} onOpenCustomerService={() => setIsCustomerServiceOpen(true)} />;
+        return <OrderSuccess completedOrder={completedOrder} navigate={navigate} onOpenCustomerService={() => setIsCustomerServiceOpen(true)} theme={theme} settings={settings} />;
       case '/tf-admin-secure-portal':
         return <AdminLogin onLoginSuccess={() => setIsAdminAuthenticated(true)} navigate={navigate} />;
       case '/admin/dashboard':

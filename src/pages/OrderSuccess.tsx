@@ -9,9 +9,11 @@ interface OrderSuccessProps {
   completedOrder: Order | null;
   navigate: (route: string) => void;
   onOpenCustomerService: () => void;
+  theme?: 'dark' | 'light';
+  settings?: StoreSettings | null;
 }
 
-export const OrderSuccess: React.FC<OrderSuccessProps> = ({ completedOrder, navigate, onOpenCustomerService }) => {
+export const OrderSuccess: React.FC<OrderSuccessProps> = ({ completedOrder, navigate, onOpenCustomerService, theme = 'dark', settings: propSettings }) => {
   const [liveStatus, setLiveStatus] = useState<Order['orderStatus']>(completedOrder?.orderStatus || 'PENDING');
   const [settings, setSettings] = useState<StoreSettings | null>(null);
   const [copied, setCopied] = useState(false);
@@ -155,7 +157,7 @@ export const OrderSuccess: React.FC<OrderSuccessProps> = ({ completedOrder, navi
           )}
           <div className="flex justify-between border-t border-neutral-800 pt-2 font-bold">
             <span className="text-neutral-400">Total Paid:</span>
-            <span className="text-emerald-400 font-mono text-sm">৳{completedOrder.finalAmount || completedOrder.productPrice}.00</span>
+            <span className="text-emerald-400 font-mono text-sm">৳{completedOrder.finalAmount || 0}.00</span>
           </div>
         </div>
 

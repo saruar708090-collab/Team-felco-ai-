@@ -131,4 +131,5 @@ export interface OrderDraft {
   discountAmount?: number;
   finalAmount?: number;
   productCategory?: string;
+  productImageUrl?: string;
 }

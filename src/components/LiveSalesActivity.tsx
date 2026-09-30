@@ -44,7 +44,7 @@ export const LiveSalesActivity: React.FC = () => {
       const snap = await getDocs(q);
       if (!snap.empty) {
         const fetched: ActivityItem[] = [];
-        snap.forEach((doc, idx) => {
+        snap.docs.forEach((doc, idx) => {
           const data = doc.data();
           const location = locations[idx % locations.length];
           const diffMinutes = Math.max(2, Math.floor((Date.now() - new Date(data.createdAt || Date.now()).getTime()) / 60000));
@@ -53,7 +53,7 @@ export const LiveSalesActivity: React.FC = () => {
           // Anonymized privacy-safe label without revealing user's real personal name
           const maskedNumber = data.whatsappNumber 
             ? `User ${data.whatsappNumber.slice(0, 3)}****${data.whatsappNumber.slice(-3)}`
-            : `VIP Member #${(Math.abs(doc.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 1000)) % 8999) + 1000}`;
+            : `VIP Member #${(Math.abs(doc.id.split('').reduce((acc: number, c: string) => acc + c.charCodeAt(0), 1000)) % 8999) + 1000}`;
 
           fetched.push({
             id: doc.id,

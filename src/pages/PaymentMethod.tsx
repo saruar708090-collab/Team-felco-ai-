@@ -2,16 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { OrderDraft, StoreSettings } from '../types';
 import { db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
-import { ArrowLeft, Check, Copy, CheckCircle2, AlertTriangle, Tag, Wallet } from 'lucide-react';
+import { ArrowLeft, Check, Copy, CheckCircle2, AlertTriangle, Tag, ShieldCheck } from 'lucide-react';
 import { useSEO } from '../hooks/useSEO';
 
 interface PaymentMethodProps {
   orderDraft: OrderDraft;
   setOrderDraft: React.Dispatch<React.SetStateAction<OrderDraft>>;
   navigate: (route: string) => void;
+  theme?: 'dark' | 'light';
+  settings?: StoreSettings | null;
 }
 
-export const PaymentMethod: React.FC<PaymentMethodProps> = ({ orderDraft, setOrderDraft, navigate }) => {
+export const PaymentMethod: React.FC<PaymentMethodProps> = ({ orderDraft, setOrderDraft, navigate, theme = 'dark', settings: propSettings }) => {
   useSEO({
     title: `Payment for ${orderDraft.productName || 'Hack'}`,
     description: 'Secure your VIP Hack tool activation by selecting bKash, Nagad, or Rocket Mobile Banking.'
@@ -25,7 +27,7 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({ orderDraft, setOrd
   }
 
   const [paymentMethod, setPaymentMethod] = useState<string>(orderDraft.paymentMethod || 'bKash');
-  const [settings, setSettings] = useState<StoreSettings>({
+  const [settings, setSettings] = useState<StoreSettings>(propSettings || {
     storeName: 'TEAM FELCO STORE',
     supportWhatsApp: '01613562615',
     supportTelegram: 'https://t.me/+NRQwX88nKUQxYWY1',
@@ -102,168 +104,99 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({ orderDraft, setOrd
 
   const fetchSettings = async () => {
     try {
-      const docSnap = await getDoc(doc(db, 'settings', 'general'));
-      if (docSnap.exists()) {
-        const data = docSnap.data() as StoreSettings;
+      const snap = await getDoc(doc(db, 'store_settings', 'main'));
+      if (snap.exists()) {
+        const data = snap.data() as StoreSettings;
         setSettings(data);
-
-        // Auto select first active method if current is not active
-        const isBkashActive = data.bkashActive !== false && Boolean(data.bkashNumber && data.bkashNumber.trim());
-        const isNagadActive = data.nagadActive !== false && Boolean(data.nagadNumber && data.nagadNumber.trim());
-        const isRocketActive = data.rocketActive !== false && Boolean(data.rocketNumber && data.rocketNumber.trim());
-
-        if (isBkashActive) {
-          setPaymentMethod('bKash');
-        } else if (isNagadActive) {
-          setPaymentMethod('Nagad');
-        } else if (isRocketActive) {
-          setPaymentMethod('Rocket');
-        } else if (data.customPaymentMethods && data.customPaymentMethods.length > 0) {
-          const activeCustom = data.customPaymentMethods.find(c => c.active !== false);
-          if (activeCustom) setPaymentMethod(activeCustom.id);
-        }
       }
-    } catch {
-      // Use defaults
+    } catch (err) {
+      console.error('Error loading store settings', err);
     }
   };
 
   const standardMethods = [
     {
       id: 'bKash',
-      label: 'Bkash Personal',
-      bnName: 'বিকাশ',
+      label: 'Bkash',
+      displayName: 'Bkash',
       number: settings.bkashNumber,
       isActive: settings.bkashActive !== false && Boolean(settings.bkashNumber && settings.bkashNumber.trim()),
-      offlineNotice: settings.bkashOfflineNotice || 'বিকাশ পেমেন্ট বর্তমানে সাময়িক সময়ের জন্য বন্ধ রয়েছে। অনুগ্রহ করে নগদ অথবা রকেটে পেমেন্ট করুন।',
+      offlineNotice: settings.bkashOfflineNotice || 'বিকাশ পেমেন্ট সাময়িক সময়ের জন্য বন্ধ রয়েছে।',
+      instructions: 'উক্ত নাম্বারে সেন্ড মানি (Send Money) করবেন এবং নির্ধারিত অর্থ প্রদান করবেন কম বা বেশি হলে অর্ডার সফল হবে না ✅',
       renderLogo: () => (
-        <div className="flex items-center justify-center select-none py-1">
-          <svg className="w-10 h-10 shrink-0" viewBox="0 0 100 100" fill="none">
-            <rect width="100" height="100" rx="20" fill="#D41A5E" />
-            <polygon points="18,24 32,36 25,24" fill="#FFFFFF" />
-            <polygon points="18,18 49,21 42,47" fill="#FFFFFF" />
-            <polygon points="50,22 65,42 43,48" fill="#FFFFFF" />
-            <polygon points="43,49 72,53 47,66" fill="#FFFFFF" />
-            <polygon points="50,65 72,54 72,57" fill="#FFFFFF" />
-            <polygon points="42,49 46,69 33,81" fill="#FFFFFF" />
-            <polygon points="64,40 79,38 73,52" fill="#FFFFFF" />
-            <polygon points="80,38 86,44 77,44" fill="#FFFFFF" />
-          </svg>
+        <div className="flex flex-col items-center justify-center py-1">
+          {/* Mathematically precise 3D Origami bKash Bird inside deep pink container */}
+          <div className="w-12 h-12 rounded-xl bg-[#E2136E] flex items-center justify-center shadow-md border border-[#E2136E]/30 relative overflow-hidden active:scale-95 transition-transform">
+            <svg viewBox="0 0 100 100" className="w-8.5 h-8.5">
+              {/* Left Wing fold */}
+              <polygon points="15,35 45,38 45,62" fill="#FFFFFF" />
+              {/* Center spine fold */}
+              <polygon points="45,38 58,35 45,62" fill="#FCE7F3" />
+              {/* Main wing shadow panel */}
+              <polygon points="58,35 78,52 45,62" fill="#FFFFFF" />
+              {/* Head tip folder */}
+              <polygon points="78,52 92,49 86,55" fill="#FCE7F3" />
+              {/* Lower tail shadow fold */}
+              <polygon points="45,62 49,85 32,98" fill="#FCE7F3" />
+              {/* Central bird structure body */}
+              <polygon points="45,62 78,52 86,55 49,85" fill="#FFFFFF" />
+              {/* Tail wing stabilizer */}
+              <polygon points="49,85 74,72 86,55" fill="#FCE7F3" />
+            </svg>
+          </div>
         </div>
       )
     },
     {
       id: 'Nagad',
-      label: 'Nagad Personal',
-      bnName: 'নগদ',
+      label: 'Nagad',
+      displayName: 'Nagad',
       number: settings.nagadNumber,
       isActive: settings.nagadActive !== false && Boolean(settings.nagadNumber && settings.nagadNumber.trim()),
-      offlineNotice: settings.nagadOfflineNotice || 'নগদ পেমেন্ট বর্তমানে সাময়িক সময়ের জন্য বন্ধ রয়েছে। অনুগ্রহ করে বিকাশ অথবা রকেটে পেমেন্ট করুন।',
+      offlineNotice: settings.nagadOfflineNotice || 'নগদ পেমেন্ট সাময়িক সময়ের জন্য বন্ধ রয়েছে।',
+      instructions: 'উক্ত নাম্বারে সেন্ড মানি (Send Money) করবেন এবং নির্ধারিত অর্থ প্রদান করবেন কম বা বেশি হলে অর্ডার সফল হবে না ✅',
       renderLogo: () => (
-        <div className="flex items-center justify-center select-none py-1">
-          <svg className="w-10 h-10 shrink-0" viewBox="0 0 100 100" fill="none">
-            <defs>
-              <radialGradient id="nagadMiniGrad4" cx="50%" cy="45%" r="60%">
-                <stop offset="0%" stopColor="#F7941D" />
-                <stop offset="55%" stopColor="#F15A24" />
-                <stop offset="100%" stopColor="#E01E26" />
-              </radialGradient>
-            </defs>
-            <rect width="100" height="100" rx="20" fill="url(#nagadMiniGrad4)" />
-            <path
-              d="M37 16 C23 23, 21 43, 34 53 C47 62, 66 56, 70 39 C71 34, 70 29, 68 25 C64 38, 52 46, 40 43 C29 40, 26 27, 37 16 Z"
-              fill="#FFFFFF"
-            />
-            <path d="M35 28 C35 19, 41 13, 46 10 L50 17 C43 21, 38 25, 35 28 Z" fill="#FFFFFF" />
-            <path d="M40 31 C43 21, 51 14, 61 12 L62 21 C53 22, 46 26, 40 31 Z" fill="#FFFFFF" />
-            <path d="M46 33 C52 25, 62 19, 74 22 L68 31 C60 28, 52 29, 46 33 Z" fill="#FFFFFF" />
-            <circle cx="47" cy="32" r="2.2" fill="#FFFFFF" />
-            <line x1="38" y1="36" x2="56" y2="36" stroke="#FFFFFF" strokeWidth="1.6" strokeLinecap="round" />
-            <path d="M47 34 L46 41 L43 46 M46 41 L52 42 L54 45" stroke="#FFFFFF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            <text
-              x="50"
-              y="84"
-              textAnchor="middle"
-              fill="#FFFFFF"
-              fontSize="28"
-              fontWeight="900"
-              fontFamily="sans-serif"
-              letterSpacing="-0.5"
-            >
-              নগদ
-            </text>
-          </svg>
+        <div className="flex flex-col items-center justify-center py-1">
+          {/* Beautiful 3D Gradient Swirling Sun Flame of Nagad */}
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-[#F7941D] to-[#ED1C24] flex flex-col items-center justify-center shadow-md border border-[#ED1C24]/30 relative overflow-hidden p-0.5 active:scale-95 transition-transform">
+            <svg viewBox="0 0 100 100" className="w-7 h-7">
+              {/* Circular swirling rays */}
+              <path d="M50,15 A35,35 0 1,1 15,50 A35,35 0 0,1 50,15 M50,23 A27,27 0 1,0 77,50 A27,27 0 0,0 50,23 Z" fill="white" />
+              <circle cx="50" cy="50" r="10" fill="white" className="opacity-30" />
+              {/* Middle core flame */}
+              <path d="M44,42 C44,32 56,32 56,42 C56,50 48,52 48,58 L52,58" stroke="white" strokeWidth="3.5" strokeLinecap="round" fill="none" />
+            </svg>
+            <span className="text-white font-black text-[9px] -mt-0.5 tracking-tighter">নগদ</span>
+          </div>
         </div>
       )
     },
     {
       id: 'Rocket',
-      label: 'Rocket Personal',
-      bnName: 'রকেট',
+      label: 'Rocket',
+      displayName: 'Rocket',
       number: settings.rocketNumber,
       isActive: settings.rocketActive !== false && Boolean(settings.rocketNumber && settings.rocketNumber.trim()),
-      offlineNotice: settings.rocketOfflineNotice || 'রকেট পেমেন্ট বর্তমানে সাময়িক সময়ের জন্য বন্ধ রয়েছে। অনুগ্রহ করে বিকাশ অথবা নগদে পেমেন্ট করুন।',
+      offlineNotice: settings.rocketOfflineNotice || 'রকেট পেমেন্ট সাময়িক সময়ের জন্য বন্ধ রয়েছে।',
+      instructions: 'উক্ত নাম্বারে সেন্ড মানি (Send Money) করবেন এবং নির্ধারিত অর্থ প্রদান করবেন কম বা বেশি হলে অর্ডার সফল হবে না ✅',
       renderLogo: () => (
-        <div className="flex items-center justify-center select-none py-1">
-          <svg className="w-24 h-10 shrink-0 rounded-lg" viewBox="0 0 220 92" fill="none">
-            <rect width="220" height="92" rx="12" fill="#89288F" />
-            <text
-              x="24"
-              y="39"
-              fill="#FFFFFF"
-              fontSize="17"
-              fontWeight="900"
-              fontFamily="Arial Black, sans-serif"
-            >
-              ROCKET
-            </text>
-            <polygon points="102,26 172,7 144,50 133,36 155,16 121,34" fill="#FFFFFF" />
-            <polygon points="121,34 133,36 126,46" fill="#F3E5F5" />
-            <text
-              x="110"
-              y="69"
-              textAnchor="middle"
-              fill="#FFFFFF"
-              fontSize="34"
-              fontWeight="900"
-              fontFamily="sans-serif"
-            >
-              রকেট
-            </text>
-            <text
-              x="115"
-              y="83"
-              textAnchor="middle"
-              fill="#FFFFFF"
-              fontSize="8.5"
-              fontWeight="700"
-              fontFamily="sans-serif"
-            >
-              ডাচ্-বাংলা ব্যাংক
-            </text>
-          </svg>
+        <div className="flex flex-col items-center justify-center py-1">
+          {/* Clean purple block with 3D paper airplane for Rocket */}
+          <div className="w-12 h-12 rounded-xl bg-[#8C3494] flex flex-col items-center justify-center shadow-md border border-[#8C3494]/30 relative overflow-hidden p-0.5 active:scale-95 transition-transform">
+            <svg viewBox="0 0 100 100" className="w-6.5 h-6.5">
+              {/* Paper airplane flying right-up */}
+              <path d="M15,65 L85,25 L55,80 L46,56 Z" fill="white" />
+              <path d="M46,56 L85,25 L15,65 Z" fill="#F3E8FF" />
+              <path d="M46,56 L55,80 L51,60 Z" fill="#D8B4FE" />
+            </svg>
+            <span className="text-white font-extrabold text-[8px] tracking-tighter -mt-0.5 leading-none">রকেট</span>
+          </div>
         </div>
       )
     }
   ];
 
-  // Custom added payment methods
-  const customMethodsList = (settings.customPaymentMethods || []).map(cm => ({
-    id: cm.id,
-    label: `${cm.name} ${cm.accountType ? `(${cm.accountType})` : ''}`,
-    bnName: cm.name,
-    number: cm.number,
-    isActive: cm.active !== false && Boolean(cm.number && cm.number.trim()),
-    offlineNotice: cm.offlineNotice || `${cm.name} পেমেন্ট বর্তমানে সাময়িক সময়ের জন্য বন্ধ রয়েছে।`,
-    instructions: cm.instructions,
-    renderLogo: () => (
-      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center shadow">
-        <Wallet className="w-5 h-5" />
-      </div>
-    )
-  }));
-
-  const paymentMethodsList = [...standardMethods, ...customMethodsList];
+  const paymentMethodsList = [...standardMethods];
 
   const selectedMethodObj = paymentMethodsList.find(m => m.id === paymentMethod) || paymentMethodsList[0];
 
@@ -291,33 +224,35 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({ orderDraft, setOrd
   };
 
   return (
-    <div className="min-h-screen bg-[#07090e] text-white py-6 px-3 sm:px-6 flex flex-col items-center justify-center">
-      <div className="w-full max-w-md space-y-3">
-        {/* Top Back Navigation */}
-        <div className="flex items-center justify-between px-1">
+    <div className="min-h-screen bg-gradient-to-br from-[#f1f5f9] via-[#e2e8f0] to-[#cbd5e1] py-6 px-3 sm:px-6 flex flex-col items-center justify-center">
+      <div className="w-full max-w-[390px] sm:max-w-[420px] space-y-3">
+        
+        {/* Top Minimal Back Navigation */}
+        <div className="flex items-center justify-between px-1 text-xs text-slate-600">
           <button
             onClick={() => navigate('/order/game')}
-            className="flex items-center gap-1 text-xs font-bold text-neutral-400 hover:text-white transition-colors cursor-pointer"
+            className="flex items-center gap-1 font-bold hover:text-slate-900 transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back</span>
           </button>
-          <span className="text-[11px] font-bold text-neutral-400">
+          <span className="font-bold text-[11px] text-slate-700">
             {orderDraft.selectedGame} • ৳{finalAmount}.00
           </span>
         </div>
 
-        {/* Main Gateway Card */}
-        <div className="bg-[#F8FAFC] text-neutral-900 rounded-[24px] p-4 sm:p-5 shadow-2xl border border-slate-200 space-y-4">
-          {/* Top Dark Header Pill */}
-          <div className="bg-[#121B2B] text-white rounded-xl py-3 px-4 text-center shadow-md">
-            <h1 className="text-sm sm:text-base font-bold tracking-wide">
+        {/* Clean Luxury White Merchant Gateway Card */}
+        <div className="bg-[#FFFFFF] text-slate-900 rounded-[28px] p-4 sm:p-5 shadow-[0_15px_40px_rgba(0,0,0,0.12)] border border-slate-100 space-y-4">
+          
+          {/* Top Dark Navy Rounded Header */}
+          <div className="bg-[#0f172a] text-white rounded-2xl py-3 px-4 text-center shadow-md">
+            <h1 className="text-sm sm:text-[15px] font-black tracking-wide">
               পেমেন্ট পদ্ধতি নির্বাচন করুন
             </h1>
           </div>
 
-          {/* Clean Payment Cards Grid */}
-          <div className={`grid gap-2 ${paymentMethodsList.length > 3 ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-3'}`}>
+          {/* 3-Column Grid Layout (Screenshot_20260930_154107 style) */}
+          <div className="grid grid-cols-3 gap-2">
             {paymentMethodsList.map(m => {
               const isSelected = paymentMethod === m.id;
               const isOffline = !m.isActive;
@@ -326,131 +261,130 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({ orderDraft, setOrd
                 <div
                   key={m.id}
                   onClick={() => setPaymentMethod(m.id)}
-                  className={`relative cursor-pointer rounded-2xl border-2 p-2.5 flex flex-col items-center justify-between min-h-[96px] transition-all duration-150 ${
+                  className={`relative cursor-pointer rounded-2xl border-2 p-2 flex flex-col items-center justify-between min-h-[96px] transition-all duration-150 ${
                     isSelected
                       ? isOffline
-                        ? 'border-red-500 ring-2 ring-red-400/20 bg-red-50/40 shadow-md'
-                        : 'border-[#1D4ED8] shadow-md ring-2 ring-[#2563EB]/20 bg-blue-50/10'
+                        ? 'border-red-500 bg-red-50/40 ring-2 ring-red-400/20 shadow-md'
+                        : 'border-[#1a56db] bg-blue-50/30 ring-2 ring-[#1a56db]/20 shadow-md'
                       : isOffline
-                        ? 'border-red-200/80 bg-red-50/20 hover:border-red-300 opacity-75'
-                        : 'border-slate-200/80 hover:border-slate-300 shadow-sm bg-white'
+                        ? 'border-red-200 bg-red-50/10 opacity-70'
+                        : 'border-slate-200 hover:border-slate-300 bg-white shadow-sm'
                   }`}
                 >
-                  {/* Status Badge: LIVE or সাময়িক বন্ধ */}
-                  {isOffline ? (
-                    <span className="absolute top-1.5 right-1.5 bg-red-600 text-white text-[7px] font-black uppercase px-1.5 py-0.5 rounded-full tracking-wider leading-none shadow-sm">
-                      সাময়িক বন্ধ
-                    </span>
-                  ) : (
-                    <span className="absolute top-1.5 right-1.5 bg-[#DC2626] text-white text-[7.5px] font-black uppercase px-1.5 py-0.5 rounded-full tracking-wider leading-none shadow-sm">
-                      LIVE
-                    </span>
-                  )}
+                  {/* LIVE Badge */}
+                  <span className="absolute top-1.5 right-1.5 bg-[#dc2626] text-white text-[7px] font-black uppercase px-1 py-0.5 rounded-full tracking-wider leading-none shadow-sm">
+                    LIVE
+                  </span>
 
-                  {/* Top-Left Selected Checkmark */}
+                  {/* Selected Check Circle */}
                   {isSelected && (
-                    <div className={`absolute top-1.5 left-1.5 w-3.5 h-3.5 rounded-full text-white flex items-center justify-center shadow ${
-                      isOffline ? 'bg-red-600' : 'bg-[#1D4ED8]'
-                    }`}>
-                      <Check className="w-2 h-2 stroke-[3]" />
+                    <div className="absolute top-1.5 left-1.5 w-3.5 h-3.5 rounded-full bg-[#1a56db] text-white flex items-center justify-center shadow">
+                      <Check className="w-2.5 h-2.5 stroke-[3]" />
                     </div>
                   )}
 
-                  {/* Logo */}
-                  <div className={`my-auto ${isOffline ? 'opacity-50 grayscale-[40%]' : ''}`}>
+                  {/* Logo Container */}
+                  <div className="my-auto w-full pt-1.5">
                     {m.renderLogo()}
                   </div>
 
-                  {/* Method Name Text Underneath */}
-                  <span className={`text-[10px] font-bold tracking-tight mt-1 text-center line-clamp-1 ${
-                    isOffline ? 'text-red-700' : 'text-slate-800'
-                  }`}>
-                    {m.label}
+                  {/* English Label underneath */}
+                  <span className="text-[10px] font-black text-slate-800 tracking-tight mt-1 text-center line-clamp-1">
+                    {m.displayName}
                   </span>
                 </div>
               );
             })}
           </div>
 
-          {/* Number & Copy Instruction Box or Offline Alert */}
+          {/* Account Number & Copy Box */}
           {selectedMethodObj.isActive ? (
-            <div className="bg-slate-100 border border-slate-200 rounded-xl p-3 space-y-2">
+            <div className="bg-[#f1f5f9] border border-slate-200 rounded-2xl p-3.5 space-y-2">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-[9px] uppercase font-bold text-slate-500 block">
-                    {selectedMethodObj.label} (Send Money)
+                  <span className="text-[10px] uppercase font-black text-slate-500 block tracking-wider">
+                    {selectedMethodObj.displayName.toUpperCase()} (SEND MONEY)
                   </span>
-                  <span className="text-base font-black font-mono tracking-wider text-slate-900">
-                    {selectedMethodObj.number}
-                  </span>
+                  <div className="text-lg font-black font-mono tracking-wider text-slate-900 mt-0.5">
+                    {selectedMethodObj.number || '01613562615'}
+                  </div>
                 </div>
+
                 <button
-                  onClick={() => handleCopyNumber(selectedMethodObj.number)}
-                  className="px-3 py-1.5 bg-[#1D4ED8] hover:bg-[#1E40AF] text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-sm cursor-pointer"
+                  type="button"
+                  onClick={() => handleCopyNumber(selectedMethodObj.number || '01613562615')}
+                  className={`px-3.5 py-1.5 font-black uppercase text-xs tracking-wider rounded-xl transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-sm ${
+                    copied
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-[#1a56db] hover:bg-[#1e429f] text-white'
+                  }`}
                 >
-                  {copied ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copied ? 'Copied' : 'Copy'}</span>
+                  {copied ? (
+                    <>
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Copied</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>Copy</span>
+                    </>
+                  )}
                 </button>
               </div>
-              <p className="text-[10px] text-slate-600 border-t border-slate-200 pt-1.5 leading-relaxed">
-                {selectedMethodObj.instructions || settings.paymentInstructions || 'এই নাম্বারে সেন্ড মানি করে নিচে Pay বাটনে ক্লিক করুন।'}
-              </p>
+
+              <div className="pt-2 border-t border-slate-200/80 text-[11px] text-slate-600 leading-snug flex items-start gap-1">
+                <span>
+                  {selectedMethodObj.instructions}
+                </span>
+              </div>
             </div>
           ) : (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-red-700 text-xs space-y-1">
-              <div className="flex items-center gap-1.5 font-black text-red-800 uppercase tracking-wide text-[11px]">
-                <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
-                <span>পেমেন্ট সাময়িক সময়ের জন্য বন্ধ</span>
-              </div>
-              <p className="text-[11px] leading-relaxed text-red-600">
-                {selectedMethodObj.offlineNotice || `দুঃখিত! ${selectedMethodObj.label} পেমেন্ট বর্তমানে সাময়িক সময়ের জন্য বন্ধ রয়েছে। অনুগ্রহ করে চালু থাকা অন্য মাধ্যমে পেমেন্ট করুন।`}
-              </p>
+            <div className="p-3 bg-red-50 border border-red-200 rounded-2xl flex items-start gap-2 text-xs text-red-600 font-bold">
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>{selectedMethodObj.offlineNotice}</span>
             </div>
           )}
 
-          {/* Coupon Code Strip */}
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Tag className="w-3 h-3 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={couponInput}
-                onChange={e => setCouponInput(e.target.value.toUpperCase())}
-                placeholder="Coupon Code"
-                className="w-full bg-white border border-slate-200 rounded-lg pl-7 pr-2 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500 uppercase font-mono"
-              />
+          {/* Coupon Code Section */}
+          <div className="space-y-1">
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Tag className="w-3.5 h-3.5 absolute left-3 top-3 text-slate-400" />
+                <input
+                  type="text"
+                  value={couponInput}
+                  onChange={e => setCouponInput(e.target.value.toUpperCase())}
+                  placeholder="COUPON CODE"
+                  className="w-full pl-8 pr-3 py-2 text-xs font-mono font-bold rounded-xl border border-slate-300 text-slate-900 bg-white focus:border-[#1a56db] focus:outline-none"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleApplyCoupon}
+                className="px-4 py-2 bg-slate-900 hover:bg-black text-white font-black uppercase text-xs tracking-wider rounded-xl transition-all cursor-pointer"
+              >
+                Apply
+              </button>
             </div>
-            <button
-              onClick={handleApplyCoupon}
-              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-lg transition-all shrink-0 cursor-pointer"
-            >
-              Apply
-            </button>
-          </div>
-          {couponError && <p className="text-[10px] font-bold text-red-500">{couponError}</p>}
-          {couponSuccess && <p className="text-[10px] font-bold text-emerald-600">{couponSuccess}</p>}
 
-          {/* Secured by Footer */}
+            {couponError && <p className="text-[10px] text-red-600 font-bold pl-1">{couponError}</p>}
+            {couponSuccess && <p className="text-[10px] text-emerald-600 font-bold pl-1 flex items-center gap-1"><Check className="w-3 h-3"/>{couponSuccess}</p>}
+          </div>
+
+          {/* Secured Seal */}
           <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-slate-600 pt-1">
-            <span className="w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[9px] font-black">
-              ✓
-            </span>
+            <ShieldCheck className="w-4 h-4 text-emerald-600" />
             <span>Secured by FELCO PAY</span>
           </div>
 
-          {/* Solid Blue Large CTA Button (Pay ৳...) */}
+          {/* Solid Royal Blue Action Button */}
           <button
             onClick={handleNext}
             disabled={!selectedMethodObj.isActive}
-            className={`w-full py-3.5 font-bold text-base tracking-wide rounded-xl shadow-md transition-all flex items-center justify-center gap-2 ${
-              selectedMethodObj.isActive
-                ? 'bg-[#1D4ED8] hover:bg-[#1E40AF] text-white cursor-pointer active:scale-[0.99]'
-                : 'bg-slate-300 text-slate-500 cursor-not-allowed'
-            }`}
+            className="w-full py-3.5 bg-[#1a56db] hover:bg-[#1e429f] text-white font-black text-base tracking-wide rounded-2xl shadow-lg shadow-blue-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
           >
-            <span>
-              {selectedMethodObj.isActive ? `Pay ৳${finalAmount}.00` : '🚫 এই মাধ্যমে পেমেন্ট সাময়িক বন্ধ'}
-            </span>
+            <span>Pay ৳{finalAmount}.00</span>
           </button>
         </div>
       </div>

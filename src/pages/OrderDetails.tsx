@@ -2,17 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { OrderDraft, Order } from '../types';
 import { db } from '../firebase';
 import { doc, setDoc } from 'firebase/firestore';
-import { ArrowRight, ArrowLeft, Upload, CheckCircle2, AlertCircle, ShieldCheck, Sparkles, Key, Check, MessageCircle, Phone } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Upload, CheckCircle2, AlertCircle, ShieldCheck, Sparkles, Key, Check, MessageCircle, Phone, Send } from 'lucide-react';
 import { useSEO } from '../hooks/useSEO';
 import { checkAndConsumePaymentSms } from '../utils/smsParser';
+
+import { StoreSettings } from '../types';
 
 interface OrderDetailsProps {
   orderDraft: OrderDraft;
   navigate: (route: string) => void;
   setCompletedOrder: (order: Order) => void;
+  theme?: 'dark' | 'light';
+  settings?: StoreSettings | null;
 }
 
-export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderDraft, navigate, setCompletedOrder }) => {
+export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderDraft, navigate, setCompletedOrder, theme = 'dark', settings }) => {
+  const isLight = theme === 'light';
+
   useSEO({
     title: `Submit Proof for ${orderDraft.productName || 'Hack'}`,
     description: 'Submit your transaction ID (TRX ID) and payment proof screenshot to verify and activate your VIP game hack code immediately.'
@@ -122,51 +128,65 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderDraft, navigate
   };
 
   return (
-    <div className="min-h-screen bg-[#06080F] text-white py-8 px-3 sm:px-6 flex flex-col items-center">
+    <div className={`min-h-screen py-8 px-3 sm:px-6 flex flex-col items-center transition-colors ${
+      isLight ? 'bg-slate-100 text-slate-900' : 'bg-[#080b12] text-white'
+    }`}>
       <div className="w-full max-w-lg space-y-4">
         {/* Step progress */}
         <div className="flex items-center justify-between px-1">
           <button 
             onClick={() => navigate('/order/payment')} 
-            className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-neutral-400 hover:text-white transition-colors bg-neutral-900/80 border border-neutral-800 px-3 py-1.5 rounded-xl cursor-pointer"
+            className={`flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider transition-colors px-3 py-1.5 rounded-xl cursor-pointer ${
+              isLight 
+                ? 'bg-slate-200 hover:bg-slate-300 text-slate-800' 
+                : 'bg-neutral-900/80 hover:bg-neutral-800 text-neutral-300 border border-neutral-800'
+            }`}
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back to Payment</span>
           </button>
           <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/25 px-3 py-1.5 rounded-xl">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="text-[11px] font-black uppercase tracking-wider text-emerald-400">Step 3 of 4 • Proof & Info</span>
+            <span className="text-[11px] font-black uppercase tracking-wider text-emerald-400">Step 3 of 3 • Proof & Info</span>
           </div>
         </div>
 
         {/* Selected Package Header */}
-        <div className="bg-gradient-to-r from-[#0d121f] via-[#141b2e] to-[#0d121f] border border-blue-500/30 rounded-2xl p-4 flex items-center justify-between shadow-xl">
+        <div className={`border rounded-2xl p-4 flex items-center justify-between shadow-xl transition-all ${
+          isLight
+            ? 'bg-white border-slate-200 text-slate-900'
+            : 'bg-gradient-to-r from-[#0d121f] via-[#141b2e] to-[#0d121f] border-blue-500/30 text-white'
+        }`}>
           <div className="space-y-0.5">
-            <span className="text-[10px] uppercase font-black tracking-widest text-blue-400 flex items-center gap-1">
+            <span className="text-[10px] uppercase font-black tracking-widest text-blue-500 flex items-center gap-1">
               <Sparkles className="w-3 h-3" />
               <span>{orderDraft.selectedGame} • {orderDraft.paymentMethod} Payment</span>
             </span>
-            <h2 className="text-sm sm:text-base font-black uppercase text-white">
+            <h2 className="text-sm sm:text-base font-black uppercase">
               {orderDraft.productName}
             </h2>
           </div>
-          <div className="text-right pl-3 border-l border-neutral-800 shrink-0">
-            <span className="text-[9px] uppercase font-black tracking-widest text-neutral-400 block">Amount Paid</span>
-            <span className="text-base sm:text-lg font-black text-emerald-400 font-mono">
+          <div className={`text-right pl-3 border-l shrink-0 ${isLight ? 'border-slate-200' : 'border-neutral-800'}`}>
+            <span className={`text-[9px] uppercase font-black tracking-widest block ${isLight ? 'text-slate-500' : 'text-neutral-400'}`}>Amount Paid</span>
+            <span className="text-base sm:text-lg font-black text-emerald-500 font-mono">
               ৳{orderDraft.finalAmount || orderDraft.productPrice}.00
             </span>
           </div>
         </div>
 
         {error && (
-          <div className="p-3.5 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2.5">
+          <div className="p-3.5 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-500 text-xs flex items-center gap-2.5">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
         {/* Form Container */}
-        <div className="bg-gradient-to-b from-[#0e1628] to-[#0a1020] border border-neutral-800 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4">
+        <div className={`border rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4 transition-all ${
+          isLight
+            ? 'bg-white border-slate-200 text-slate-900'
+            : 'bg-gradient-to-b from-[#0e1628] to-[#0a1020] border-slate-800/90 text-white'
+        }`}>
           <form onSubmit={handleValidateAndPreview} className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-xs font-bold uppercase tracking-wider text-neutral-300">

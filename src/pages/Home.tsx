@@ -31,7 +31,7 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
     title: viewingProductDetails 
       ? viewingProductDetails.name 
       : 'Team Felco Store - Premium Colour Trading & Game Hacks',
-    description: viewingProductDetails 
+    description: (viewingProductDetails && viewingProductDetails.description)
       ? viewingProductDetails.description 
       : 'Get premium VIP colour trading predictions, auto-calculators, game prediction algorithms and tutorial guides directly from Team Felco.',
     ogType: viewingProductDetails ? 'product' : 'website',
