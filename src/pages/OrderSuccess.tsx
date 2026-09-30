@@ -4,6 +4,7 @@ import { db } from '../firebase';
 import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { CheckCircle2, Home, Clock, XCircle, Send, SendHorizontal, Copy, Check, ExternalLink } from 'lucide-react';
 import { useSEO } from '../hooks/useSEO';
+import confetti from 'canvas-confetti';
 
 interface OrderSuccessProps {
   completedOrder: Order | null;
@@ -31,6 +32,14 @@ export const OrderSuccess: React.FC<OrderSuccessProps> = ({ completedOrder, navi
 
     setLiveStatus(completedOrder.orderStatus);
 
+    if (completedOrder.orderStatus === 'COMPLETED') {
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+    }
+
     getDoc(doc(db, 'settings', 'general')).then(snap => {
       if (snap.exists()) {
         setSettings(snap.data() as StoreSettings);
@@ -40,6 +49,13 @@ export const OrderSuccess: React.FC<OrderSuccessProps> = ({ completedOrder, navi
     const unsubOrder = onSnapshot(doc(db, 'orders', completedOrder.orderId), snap => {
       if (snap.exists()) {
         const data = snap.data() as Order;
+        if (data.orderStatus === 'COMPLETED' && liveStatus !== 'COMPLETED') {
+          confetti({
+            particleCount: 120,
+            spread: 80,
+            origin: { y: 0.6 }
+          });
+        }
         setLiveStatus(data.orderStatus);
       }
     });
