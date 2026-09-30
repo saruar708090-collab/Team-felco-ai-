@@ -321,12 +321,22 @@ export const AdminGames: React.FC<AdminGamesProps> = ({ currentRoute, navigate }
                     style={{ backgroundColor: game.badgeBg || '#1E293B', color: game.badgeText || '#FFFFFF' }}
                     className="w-full h-16 rounded-2xl flex flex-col items-center justify-center shadow-inner border border-white/10 relative overflow-hidden"
                   >
-                    <span className="font-black text-xl tracking-wider uppercase font-mono">
-                      {game.name}
-                    </span>
-                    <span className="text-[10px] font-bold opacity-80 uppercase tracking-widest">
-                      {game.subtitle || game.type}
-                    </span>
+                    {game.logoUrl && game.logoUrl.trim() ? (
+                      <img 
+                        src={game.logoUrl} 
+                        alt={game.name} 
+                        className="w-full h-full object-cover" 
+                      />
+                    ) : (
+                      <>
+                        <span className="font-black text-xl tracking-wider uppercase font-mono">
+                          {game.name}
+                        </span>
+                        <span className="text-[10px] font-bold opacity-80 uppercase tracking-widest">
+                          {game.subtitle || game.type}
+                        </span>
+                      </>
+                    )}
                   </div>
 
                   <div className="mt-4 flex items-center justify-between">
@@ -482,14 +492,24 @@ export const AdminGames: React.FC<AdminGamesProps> = ({ currentRoute, navigate }
                   </label>
                   <div
                     style={{ backgroundColor: badgeBg, color: badgeText }}
-                    className="w-full h-14 rounded-xl flex flex-col items-center justify-center border border-white/10 shadow"
+                    className="w-full h-14 rounded-xl flex flex-col items-center justify-center border border-white/10 shadow relative overflow-hidden"
                   >
-                    <span className="font-black text-lg tracking-wider uppercase font-mono">
-                      {name || 'GAME NAME'}
-                    </span>
-                    <span className="text-[9px] font-bold opacity-80 uppercase">
-                      {subtitle || 'Server'}
-                    </span>
+                    {logoUrl && logoUrl.trim() ? (
+                      <img 
+                        src={logoUrl} 
+                        alt="Preview" 
+                        className="w-full h-full object-cover" 
+                      />
+                    ) : (
+                      <>
+                        <span className="font-black text-lg tracking-wider uppercase font-mono">
+                          {name || 'GAME NAME'}
+                        </span>
+                        <span className="text-[9px] font-bold opacity-80 uppercase">
+                          {subtitle || 'Server'}
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
 

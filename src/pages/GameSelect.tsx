@@ -147,8 +147,12 @@ export const GameSelect: React.FC<GameSelectProps> = ({ orderDraft, setOrderDraf
   const renderGameBadgeLogo = (game: GameItem) => {
     if (game.logoUrl && game.logoUrl.trim()) {
       return (
-        <div className="w-full h-10 rounded-lg overflow-hidden bg-[#0f172a] flex items-center justify-center p-0.5 border border-slate-700/50">
-          <img src={game.logoUrl} alt={game.name} className="w-full h-full object-contain" />
+        <div className="w-full h-12 rounded-xl overflow-hidden shadow-md border border-slate-300/80 bg-neutral-900 relative flex items-center justify-center">
+          <img 
+            src={game.logoUrl} 
+            alt={game.name} 
+            className="w-full h-full object-cover rounded-xl" 
+          />
         </div>
       );
     }
