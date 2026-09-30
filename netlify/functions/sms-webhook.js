@@ -26,21 +26,21 @@ function parseSmsText(rawText) {
   return { trxId, amount: isNaN(amount) ? 0 : amount, method, sender, rawSms: text };
 }
 
-exports.handler = async (event) => {
+export const handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Content-Type': 'application/json'
   };
 
-  if (event.httpMethod === 'OPTIONS') {
+  if (event?.httpMethod === 'OPTIONS') {
     return { statusCode: 200, headers, body: JSON.stringify({ ok: true }) };
   }
 
   try {
-    const queryParams = event.queryStringParameters || {};
+    const queryParams = event?.queryStringParameters || {};
     let bodyData = {};
-    if (event.body) {
+    if (event?.body) {
       try {
         bodyData = JSON.parse(event.body);
       } catch {
@@ -179,3 +179,5 @@ exports.handler = async (event) => {
     };
   }
 };
+
+export default handler;
