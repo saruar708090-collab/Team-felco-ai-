@@ -10,6 +10,11 @@ export interface Product {
   category?: string;
   active: boolean;
   soldOut?: boolean;
+  isFree?: boolean;
+  downloadUrl?: string;
+  buttonText?: string;
+  fileSize?: string;
+  version?: string;
   createdAt?: string;
   updatedAt?: string;
 }

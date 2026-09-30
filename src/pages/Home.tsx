@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Product, OrderDraft } from '../types';
 import { db } from '../firebase';
 import { collection, getDocs } from 'firebase/firestore';
-import { ArrowRight, Search, ShieldCheck, Star, Gamepad2, X, Flame, Sparkles } from 'lucide-react';
+import { ArrowRight, Search, ShieldCheck, Star, Gamepad2, X, Flame, Sparkles, Download, ExternalLink } from 'lucide-react';
 import { ProductReviewsModal } from '../components/ProductReviewsModal';
+import { ProductDetailsPage } from './ProductDetailsPage';
 import { useSEO } from '../hooks/useSEO';
 
 interface HomeProps {
@@ -39,7 +40,7 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
   });
 
   const categories = React.useMemo(() => {
-    const base = ['All', 'Colour Trading Hack', 'Aviator Hack'];
+    const base = ['All', 'Colour Trading Hack', 'Aviator Hack', 'Free Tools & APKs'];
     const productCats = products.map(p => p.category).filter(Boolean) as string[];
     const all = Array.from(new Set([...base, ...customGames, ...productCats]));
     return all;
@@ -342,20 +343,35 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
 
                       {/* Floating Price Badge (Top-Right) */}
                       <div className="absolute top-2 right-2 bg-black/85 backdrop-blur-md px-2 py-1 rounded-lg border border-neutral-700/60 shadow-lg text-right z-10">
-                        {hasDiscount && (
-                          <div className="text-[9px] font-bold text-red-400 line-through leading-tight">
-                            BDT {product.originalPrice}
+                        {product.isFree ? (
+                          <div className="text-xs sm:text-sm font-black text-emerald-400 tracking-tight leading-tight flex items-center gap-1">
+                            <Sparkles className="w-3 h-3 text-emerald-400" />
+                            <span>100% FREE</span>
                           </div>
+                        ) : (
+                          <>
+                            {hasDiscount && (
+                              <div className="text-[9px] font-bold text-red-400 line-through leading-tight">
+                                BDT {product.originalPrice}
+                              </div>
+                            )}
+                            <div className="text-xs sm:text-sm font-black text-emerald-400 tracking-tight leading-tight">
+                              BDT {product.price}
+                            </div>
+                          </>
                         )}
-                        <div className="text-xs sm:text-sm font-black text-emerald-400 tracking-tight leading-tight">
-                          BDT {product.price}
-                        </div>
                       </div>
 
                       {/* Floating Discount Badge (Bottom-Left) */}
-                      {hasDiscount && !product.soldOut && (
+                      {!product.isFree && hasDiscount && !product.soldOut && (
                         <div className="absolute bottom-2 left-2 bg-gradient-to-r from-rose-600 to-red-600 text-white text-[9px] sm:text-[10px] font-black px-2 py-0.5 rounded-md shadow-md z-10 uppercase tracking-wide">
                           SAVE {discountPercent}%
+                        </div>
+                      )}
+                      {product.isFree && (
+                        <div className="absolute bottom-2 left-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-black text-[9px] sm:text-[10px] font-black px-2 py-0.5 rounded-md shadow-md z-10 uppercase tracking-wide flex items-center gap-1">
+                          <Download className="w-2.5 h-2.5 stroke-[3]" />
+                          <span>NO ORDER NEEDED</span>
                         </div>
                       )}
                     </div>
@@ -365,8 +381,12 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
                       <div>
                         {/* Category Badge */}
                         <div className="flex items-center flex-wrap gap-1 mb-1">
-                          <span className="inline-block text-[8px] sm:text-[9px] font-bold uppercase px-2 py-0.5 rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-400">
-                            {product.category || 'COLOUR TRADING HACK'}
+                          <span className={`inline-block text-[8px] sm:text-[9px] font-bold uppercase px-2 py-0.5 rounded border ${
+                            product.isFree 
+                              ? 'border-emerald-400/40 bg-emerald-500/20 text-emerald-300 font-black' 
+                              : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+                          }`}>
+                            {product.isFree ? '🎁 FREE TOOL / APK' : (product.category || 'COLOUR TRADING HACK')}
                           </span>
                         </div>
 
@@ -380,26 +400,43 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
                     </div>
                   </div>
 
-                  {/* Actions (Buy Now & Reviews) */}
+                  {/* Actions (Buy Now / Direct Download & Reviews) */}
                   <div className="p-2.5 sm:p-3 pt-0 flex flex-col gap-1.5">
-                    <button 
-                      onClick={() => !product.soldOut && handleBuyNow(product)}
-                      disabled={product.soldOut}
-                      className={`w-full py-2 font-black uppercase text-[11px] sm:text-xs tracking-wider rounded-xl transition-all flex items-center justify-center gap-1 active:scale-[0.98] ${
-                        product.soldOut
-                          ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed'
-                          : isLight
-                            ? 'bg-neutral-900 text-white hover:bg-black shadow-sm'
-                            : 'bg-white text-black hover:bg-neutral-200 shadow-md'
-                      }`}
-                    >
-                      <span>{product.soldOut ? 'SOLD OUT' : 'BUY NOW'}</span>
-                      {!product.soldOut && <span className="text-xs">→</span>}
-                    </button>
+                    {product.isFree ? (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (product.downloadUrl) {
+                            window.open(product.downloadUrl, '_blank');
+                          } else {
+                            setViewingProductDetails(product);
+                          }
+                        }}
+                        className="w-full py-2 bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-black font-black uppercase text-[11px] sm:text-xs tracking-wider rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20 active:scale-[0.98] cursor-pointer"
+                      >
+                        <Download className="w-3.5 h-3.5 stroke-[2.5]" />
+                        <span>{product.buttonText || 'Download Free'}</span>
+                      </button>
+                    ) : (
+                      <button 
+                        onClick={() => !product.soldOut && handleBuyNow(product)}
+                        disabled={product.soldOut}
+                        className={`w-full py-2 font-black uppercase text-[11px] sm:text-xs tracking-wider rounded-xl transition-all flex items-center justify-center gap-1 active:scale-[0.98] cursor-pointer ${
+                          product.soldOut
+                            ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed'
+                            : isLight
+                              ? 'bg-neutral-900 text-white hover:bg-black shadow-sm'
+                              : 'bg-white text-black hover:bg-neutral-200 shadow-md'
+                        }`}
+                      >
+                        <span>{product.soldOut ? 'SOLD OUT' : 'BUY NOW'}</span>
+                        {!product.soldOut && <span className="text-xs">→</span>}
+                      </button>
+                    )}
 
                     <button
                       onClick={() => setSelectedProduct(product)}
-                      className={`w-full py-1.5 px-2 text-[10px] rounded-lg transition-all flex items-center justify-center gap-1.5 border group/rev active:scale-[0.98] ${
+                      className={`w-full py-1.5 px-2 text-[10px] rounded-lg transition-all flex items-center justify-center gap-1.5 border group/rev active:scale-[0.98] cursor-pointer ${
                         isLight 
                           ? 'bg-slate-50 border-slate-200 text-neutral-600 hover:bg-amber-50 hover:border-amber-300 hover:text-amber-800' 
                           : 'bg-neutral-900/60 border-neutral-800/80 text-neutral-400 hover:bg-neutral-850 hover:border-amber-500/30 hover:text-neutral-200'
@@ -418,199 +455,24 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
         )}
       </div>
 
+      {/* Customer Reviews Modal */}
       <ProductReviewsModal
         product={selectedProduct}
         isOpen={!!selectedProduct}
         onClose={() => setSelectedProduct(null)}
       />
 
-      {/* Product Details Modal */}
+      {/* Full-Screen Product Details Page View */}
       {viewingProductDetails && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-90 backdrop-blur-sm overflow-y-auto animate-fadeIn">
-          <div className={`border text-white w-full max-w-lg rounded-2xl p-6 sm:p-8 shadow-2xl relative my-8 max-h-[90vh] flex flex-col transition-colors ${isLight ? 'bg-white border-slate-200 text-neutral-900' : 'bg-[#0d0d10] border-neutral-800'}`}>
-            {/* Header */}
-            <div className={`flex items-center justify-between mb-6 shrink-0 border-b pb-4 ${isLight ? 'border-slate-100' : 'border-neutral-800'}`}>
-              <div>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-500 border border-emerald-500/30">
-                    {viewingProductDetails.category || 'HGNICE'}
-                  </span>
-                  {viewingProductDetails.originalPrice && viewingProductDetails.originalPrice > viewingProductDetails.price && !viewingProductDetails.soldOut && (
-                    <span className="bg-gradient-to-r from-rose-600 to-amber-500 text-white font-black text-[9px] uppercase tracking-wider px-2 py-0.5 rounded shadow flex items-center gap-1">
-                      <Flame className="w-2.5 h-2.5 fill-current text-amber-200" />
-                      <span>SALE</span>
-                    </span>
-                  )}
-                  {(() => {
-                    if (!viewingProductDetails.createdAt || viewingProductDetails.soldOut) return null;
-                    try {
-                      const cTime = new Date(viewingProductDetails.createdAt).getTime();
-                      if (!isNaN(cTime) && Date.now() - cTime < 14 * 24 * 60 * 60 * 1000) {
-                        return (
-                          <span className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-black text-[9px] uppercase tracking-wider px-2 py-0.5 rounded shadow flex items-center gap-1">
-                            <Sparkles className="w-2.5 h-2.5 text-cyan-200" />
-                            <span>NEW</span>
-                          </span>
-                        );
-                      }
-                    } catch {
-                      // ignore
-                    }
-                    return null;
-                  })()}
-                </div>
-                <h3 className={`text-base sm:text-lg font-black uppercase tracking-tight mt-1.5 ${isLight ? 'text-neutral-900' : 'text-white'}`}>
-                  {viewingProductDetails.name}
-                </h3>
-              </div>
-              <button 
-                onClick={() => setViewingProductDetails(null)} 
-                className={`transition-colors ${isLight ? 'text-neutral-400 hover:text-neutral-900' : 'text-neutral-400 hover:text-white'}`}
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Scrollable Content */}
-            <div className="overflow-y-auto pr-1 flex-1 pb-4 space-y-5 scrollbar-thin">
-              {/* Product Image */}
-              <div className="relative aspect-video rounded-xl overflow-hidden bg-neutral-950 shadow-md">
-                <img 
-                  src={viewingProductDetails.imageUrl || 'https://images.unsplash.com/photo-1642543492481-44e81e3914a7?w=800&auto=format&fit=crop&q=60'} 
-                  alt={viewingProductDetails.name} 
-                  className="w-full h-full object-cover" 
-                />
-                {viewingProductDetails.soldOut && (
-                  <div className="absolute inset-0 bg-black/75 backdrop-blur-[1px] flex items-center justify-center">
-                    <span className="bg-red-600 text-white font-black text-xs uppercase tracking-widest px-4 py-2 rounded-xl shadow-lg border border-red-500 animate-pulse">
-                      SOLD OUT
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* Pricing Block */}
-              <div className={`p-4 rounded-xl border flex items-center justify-between ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-neutral-950 border-neutral-900'}`}>
-                <div>
-                  <span className={`text-[10px] uppercase font-bold block ${isLight ? 'text-neutral-500' : 'text-neutral-400'}`}>Price (মূল্য):</span>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    {viewingProductDetails.originalPrice && viewingProductDetails.originalPrice > viewingProductDetails.price && (
-                      <span className="line-through text-red-500 font-bold text-sm">BDT {viewingProductDetails.originalPrice}</span>
-                    )}
-                    <span className="text-emerald-500 font-black text-xl">BDT {viewingProductDetails.price}</span>
-                  </div>
-                </div>
-                {viewingProductDetails.originalPrice && viewingProductDetails.originalPrice > viewingProductDetails.price && !viewingProductDetails.soldOut && (
-                  <span className="bg-rose-600 text-white text-[10px] font-black px-3 py-1.5 rounded-lg uppercase tracking-wider animate-bounce">
-                    SAVE {Math.round(((viewingProductDetails.originalPrice - viewingProductDetails.price) / viewingProductDetails.originalPrice) * 100)}%
-                  </span>
-                )}
-              </div>
-
-              {/* Description & Guide */}
-              <div className="space-y-4">
-                <div>
-                  <h4 className={`text-[10px] sm:text-xs uppercase font-extrabold tracking-widest ${isLight ? 'text-neutral-500' : 'text-neutral-400'}`}>Short Summary (সংক্ষিপ্ত বিবরণ)</h4>
-                  <p className={`text-xs mt-1 leading-relaxed ${isLight ? 'text-neutral-700' : 'text-neutral-300'}`}>
-                    {viewingProductDetails.description}
-                  </p>
-                </div>
-
-                {viewingProductDetails.detailedDescription && (
-                  <div className={`pt-4 border-t ${isLight ? 'border-slate-100' : 'border-neutral-800'}`}>
-                    <h4 className="text-[10px] sm:text-xs uppercase font-extrabold tracking-widest text-emerald-500">Detailed Guide & Instructions (বিস্তারিত নির্দেশিকা)</h4>
-                    <p className={`text-xs mt-2 leading-relaxed whitespace-pre-line ${isLight ? 'text-neutral-800' : 'text-neutral-200'}`}>
-                      {viewingProductDetails.detailedDescription}
-                    </p>
-                  </div>
-                )}
-
-                {/* Embedded YouTube video block */}
-                {viewingProductDetails.youtubeUrl && (
-                  <div className={`pt-4 border-t ${isLight ? 'border-slate-100' : 'border-neutral-800'} space-y-2`}>
-                    <h4 className="text-[10px] sm:text-xs uppercase font-extrabold tracking-widest text-[#ff0000] flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-red-600 inline-block animate-pulse" />
-                      <span>Video Tutorial & Hack Proof (ভিডিও প্রুফ / ব্যবহারের নিয়ম)</span>
-                    </h4>
-                    <div className="relative aspect-video rounded-xl overflow-hidden border border-neutral-800 bg-neutral-950 shadow-md">
-                      {(() => {
-                        // Extract video ID from any YouTube URL format (watch?v=, share, embed, etc.)
-                        let videoId = '';
-                        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-                        const match = viewingProductDetails.youtubeUrl.match(regExp);
-                        if (match && match[2].length === 11) {
-                          videoId = match[2];
-                        }
-                        
-                        if (videoId) {
-                          return (
-                            <iframe
-                              className="absolute top-0 left-0 w-full h-full"
-                              src={`https://www.youtube.com/embed/${videoId}`}
-                              title="YouTube video player"
-                              frameBorder="0"
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                              allowFullScreen
-                            ></iframe>
-                          );
-                        } else {
-                          return (
-                            <a
-                              href={viewingProductDetails.youtubeUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-neutral-900 via-neutral-950 to-black hover:from-neutral-850 hover:to-neutral-900 transition-all border border-red-500/10 group cursor-pointer"
-                            >
-                              {/* Giant Red Pulsating YouTube Logo Container */}
-                              <div className="relative mb-3.5 flex items-center justify-center">
-                                <div className="absolute inset-0 bg-red-600/25 rounded-full blur-2xl group-hover:bg-red-600/40 transition-all duration-300 w-20 h-20"></div>
-                                <svg viewBox="0 0 24 24" className="w-20 h-20 text-red-600 fill-current relative drop-shadow-2xl group-hover:scale-110 group-hover:text-red-500 transition-all duration-300">
-                                  <path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.107C19.522 3.543 12 3.543 12 3.543s-7.522 0-9.388.513a3.003 3.003 0 0 0-2.11 2.107C0 8.029 0 12 0 12s0 3.971.502 5.837a3.003 3.003 0 0 0 2.11 2.107C4.478 20.457 12 20.457 12 20.457s7.522 0 9.388-.513a3.003 3.003 0 0 0 2.11-2.107C24 15.971 24 12 24 12s0-3.971-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                                </svg>
-                              </div>
-                              <span className="text-sm font-black text-white uppercase tracking-widest group-hover:text-red-500 transition-colors">WATCH VIDEO TUTORIAL</span>
-                              <span className="text-xs font-bold text-red-500 mt-1 flex items-center gap-1 group-hover:underline">
-                                ইউটিউবে ভিডিও গাইডটি দেখতে এখানে ক্লিক করুন ↗
-                              </span>
-                            </a>
-                          );
-                        }
-                      })()}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Footer Action Button */}
-            <div className={`pt-4 border-t shrink-0 flex items-center justify-end space-x-3 ${isLight ? 'border-slate-100' : 'border-neutral-800'}`}>
-              <button 
-                onClick={() => setViewingProductDetails(null)} 
-                className={`px-5 py-3 rounded-xl font-bold uppercase text-xs tracking-wider transition-colors ${isLight ? 'bg-slate-100 text-neutral-700 hover:bg-slate-200' : 'bg-neutral-800 text-white hover:bg-neutral-700'}`}
-              >
-                Close (বন্ধ করুন)
-              </button>
-              <button 
-                onClick={() => {
-                  if (!viewingProductDetails.soldOut) {
-                    handleBuyNow(viewingProductDetails);
-                    setViewingProductDetails(null);
-                  }
-                }}
-                disabled={viewingProductDetails.soldOut}
-                className={`px-6 py-3 font-extrabold uppercase text-xs tracking-widest rounded-xl transition-all flex items-center gap-1.5 shadow-md ${
-                  viewingProductDetails.soldOut
-                    ? 'bg-neutral-800 border border-neutral-700 text-neutral-500 cursor-not-allowed opacity-60'
-                    : isLight 
-                      ? 'bg-neutral-900 text-white hover:bg-neutral-800' 
-                      : 'bg-emerald-500 text-black hover:bg-emerald-400'
-                }`}
-              >
-                <span>{viewingProductDetails.soldOut ? 'Sold Out' : 'Buy Now (অর্ডার করুন)'}</span>
-                {!viewingProductDetails.soldOut && <ArrowRight className="w-3.5 h-3.5" />}
-              </button>
-            </div>
-          </div>
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black animate-fadeIn">
+          <ProductDetailsPage
+            selectedProduct={viewingProductDetails}
+            navigate={navigate}
+            setOrderDraft={setOrderDraft}
+            theme={theme}
+            settings={settings}
+            onBack={() => setViewingProductDetails(null)}
+          />
         </div>
       )}
     </div>

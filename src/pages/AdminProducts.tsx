@@ -28,6 +28,11 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
   const [category, setCategory] = useState('Colour Trading Hack');
   const [active, setActive] = useState(true);
   const [soldOut, setSoldOut] = useState(false);
+  const [isFree, setIsFree] = useState(false);
+  const [downloadUrl, setDownloadUrl] = useState('');
+  const [buttonText, setButtonText] = useState('Download Free');
+  const [version, setVersion] = useState('');
+  const [fileSize, setFileSize] = useState('');
   const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
@@ -110,21 +115,31 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
     setCategory('Colour Trading Hack');
     setActive(true);
     setSoldOut(false);
+    setIsFree(false);
+    setDownloadUrl('');
+    setButtonText('Download Free (ফ্রি ডাউনলোড)');
+    setVersion('v1.0');
+    setFileSize('12 MB');
     setModalOpen(true);
   };
 
   const handleOpenEdit = (product: Product) => {
     setEditingProduct(product);
     setName(product.name);
-    setDescription(product.description);
+    setDescription(product.description || '');
     setDetailedDescription(product.detailedDescription || '');
     setYoutubeUrl(product.youtubeUrl || '');
-    setPrice(product.price.toString());
+    setPrice(product.price ? product.price.toString() : (product.isFree ? '0' : ''));
     setOriginalPrice(product.originalPrice ? product.originalPrice.toString() : '');
     setImageUrl(product.imageUrl);
     setCategory(product.category || 'Colour Trading Hack');
     setActive(product.active);
     setSoldOut(!!product.soldOut);
+    setIsFree(!!product.isFree);
+    setDownloadUrl(product.downloadUrl || '');
+    setButtonText(product.buttonText || 'Download Free (ফ্রি ডাউনলোড)');
+    setVersion(product.version || '');
+    setFileSize(product.fileSize || '');
     setModalOpen(true);
   };
 
@@ -132,18 +147,25 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
     e.preventDefault();
     try {
       const id = editingProduct ? editingProduct.id : name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      const finalPrice = isFree ? 0 : (parseFloat(price) || 0);
+
       const payload: Product = {
         id,
         name,
         description,
         detailedDescription: detailedDescription || undefined,
         youtubeUrl: youtubeUrl || undefined,
-        price: parseFloat(price) || 0,
-        originalPrice: originalPrice ? parseFloat(originalPrice) : undefined,
+        price: finalPrice,
+        originalPrice: (!isFree && originalPrice) ? parseFloat(originalPrice) : undefined,
         imageUrl,
-        category,
+        category: isFree && category === 'Colour Trading Hack' ? 'Free Tools & APKs' : category,
         active,
-        soldOut,
+        soldOut: isFree ? false : soldOut,
+        isFree: !!isFree,
+        downloadUrl: isFree ? (downloadUrl.trim() || undefined) : undefined,
+        buttonText: isFree ? (buttonText.trim() || 'Download Free') : undefined,
+        version: version.trim() || undefined,
+        fileSize: fileSize.trim() || undefined,
         updatedAt: new Date().toISOString()
       };
 
@@ -233,22 +255,35 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
                       <div>
                         <div className="flex items-center flex-wrap gap-1.5">
                           <h3 className="font-black uppercase tracking-wide text-sm sm:text-base">{product.name}</h3>
-                          {product.category && (
+                          {product.isFree ? (
+                            <span className="text-[9px] bg-gradient-to-r from-emerald-500 to-teal-400 text-black font-black uppercase px-2 py-0.5 rounded shadow">
+                              🎁 FREE TOOL
+                            </span>
+                          ) : product.category ? (
                             <span className="text-[9px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-extrabold uppercase px-2 py-0.5 rounded">
                               {product.category}
                             </span>
-                          )}
-                          {product.soldOut && (
+                          ) : null}
+                          {product.soldOut && !product.isFree && (
                             <span className="text-[8px] bg-rose-600 text-white font-extrabold uppercase px-1.5 py-0.5 rounded animate-pulse">
                               SOLD OUT
                             </span>
                           )}
                         </div>
                         <div className="flex items-center gap-2 text-xs font-mono font-bold text-neutral-400 mt-0.5">
-                          {product.originalPrice && product.originalPrice > product.price && (
-                            <span className="line-through text-red-500">BDT {product.originalPrice}</span>
+                          {product.isFree ? (
+                            <span className="text-emerald-400 font-bold flex items-center gap-1">
+                              <span>Direct Download Link:</span>
+                              <span className="text-neutral-400 text-[10px] max-w-[140px] truncate">{product.downloadUrl || 'Not set'}</span>
+                            </span>
+                          ) : (
+                            <>
+                              {product.originalPrice && product.originalPrice > product.price && (
+                                <span className="line-through text-red-500">BDT {product.originalPrice}</span>
+                              )}
+                              <span className="text-emerald-400">BDT {product.price}</span>
+                            </>
                           )}
-                          <span className="text-emerald-400">BDT {product.price}</span>
                         </div>
                       </div>
                     </div>
@@ -265,14 +300,14 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
                 <div className="flex items-center justify-end space-x-3 pt-4 border-t border-neutral-900">
                   <button 
                     onClick={() => handleOpenEdit(product)}
-                    className="px-4 py-2 bg-neutral-900 border border-neutral-800 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-neutral-800 transition-colors flex items-center gap-1.5"
+                    className="px-4 py-2 bg-neutral-900 border border-neutral-800 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-neutral-800 transition-colors flex items-center gap-1.5 cursor-pointer"
                   >
                     <Edit2 className="w-3.5 h-3.5" />
                     <span>Edit</span>
                   </button>
                   <button 
                     onClick={() => handleDeleteProduct(product.id)}
-                    className="px-4 py-2 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-red-500/20 transition-colors flex items-center gap-1.5"
+                    className="px-4 py-2 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-red-500/20 transition-colors flex items-center gap-1.5 cursor-pointer"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                     <span>Delete</span>
@@ -289,20 +324,106 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
             <div className="bg-neutral-900 border border-neutral-800 text-white w-full max-w-lg rounded-2xl p-6 sm:p-8 shadow-2xl relative my-8 max-h-[90vh] flex flex-col">
               <div className="flex items-center justify-between mb-6 shrink-0 border-b border-neutral-800/80 pb-4">
                 <h3 className="text-xl font-black uppercase tracking-tight">{editingProduct ? 'Edit Product' : 'Add New Product'}</h3>
-                <button onClick={() => setModalOpen(false)} className="text-neutral-400 hover:text-white transition-colors">
+                <button onClick={() => setModalOpen(false)} className="text-neutral-400 hover:text-white transition-colors cursor-pointer">
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               <form onSubmit={handleSaveProduct} className="space-y-5 overflow-y-auto pr-1 flex-1 pb-4 scrollbar-thin scrollbar-thumb-neutral-800">
+                
+                {/* Free Product Switch */}
+                <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 flex items-center justify-between gap-3">
+                  <div>
+                    <span className="text-xs font-black uppercase tracking-wider text-emerald-400 block flex items-center gap-1.5">
+                      <span>🎁 Free Product / Direct Download?</span>
+                    </span>
+                    <span className="text-[11px] text-neutral-400 block mt-0.5">
+                      এটি চালু করলে পেমেন্ট/অর্ডারের বদলে সরাসরি ডাউনলোড বাটন থাকবে।
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsFree(!isFree)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
+                      isFree ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/25' : 'bg-neutral-800 text-neutral-400'
+                    }`}
+                  >
+                    {isFree ? 'YES (ফ্রি)' : 'NO (পেইড)'}
+                  </button>
+                </div>
+
                 <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-1">Product Name (প্রোডাক্টের নাম)</label>
+                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-1">Product Name (প্রোডাক্টের নাম) *</label>
                   <input 
                     type="text"
                     value={name}
                     onChange={e => setName(e.target.value)}
                     required
-                    placeholder="e.g. BDWIN VIP Colour Hack"
+                    placeholder="e.g. BDWIN VIP Colour Hack বা Aviator Free Signal Bot"
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-white transition-colors font-bold"
+                  />
+                </div>
+
+                {/* Free Product Download Link & Button Text */}
+                {isFree && (
+                  <div className="space-y-4 bg-neutral-950 p-4 rounded-2xl border border-emerald-500/30 animate-fadeIn">
+                    <div>
+                      <label className="text-xs font-black uppercase tracking-wider text-emerald-400 block mb-1">
+                        Direct Download URL (আপনার ডাউনলোড লিংক / APK লিংক / ড্রাইভ লিংক) *
+                      </label>
+                      <input 
+                        type="url"
+                        value={downloadUrl}
+                        onChange={e => setDownloadUrl(e.target.value)}
+                        required={isFree}
+                        placeholder="e.g. https://mega.nz/... অথবা https://t.me/..."
+                        className="w-full bg-neutral-900 border border-emerald-500/40 rounded-xl px-4 py-3 text-xs text-emerald-400 focus:outline-none focus:border-emerald-400 transition-colors font-mono font-bold"
+                      />
+                      <span className="text-[10px] text-neutral-500 mt-1 block">কাস্টমার ক্লিক করলে সরাসরি এই লিংকে চলে যাবে</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="sm:col-span-1">
+                        <label className="text-[10px] font-bold uppercase text-neutral-400 block mb-1">Button Text</label>
+                        <input 
+                          type="text"
+                          value={buttonText}
+                          onChange={e => setButtonText(e.target.value)}
+                          placeholder="Download Free"
+                          className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white font-bold"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold uppercase text-neutral-400 block mb-1">Version (ঐচ্ছিক)</label>
+                        <input 
+                          type="text"
+                          value={version}
+                          onChange={e => setVersion(e.target.value)}
+                          placeholder="v2.5 Pro"
+                          className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold uppercase text-neutral-400 block mb-1">File Size (ঐচ্ছিক)</label>
+                        <input 
+                          type="text"
+                          value={fileSize}
+                          onChange={e => setFileSize(e.target.value)}
+                          placeholder="14.5 MB"
+                          className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white font-mono"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-1">Short Description (সংক্ষিপ্ত বিবরণ)</label>
+                  <input 
+                    type="text"
+                    value={description}
+                    onChange={e => setDescription(e.target.value)}
+                    placeholder="e.g. 100% Accurate AI Predictions with instant bypass"
                     className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-white transition-colors"
                   />
                 </div>
@@ -312,7 +433,7 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
                   <textarea 
                     value={detailedDescription}
                     onChange={e => setDetailedDescription(e.target.value)}
-                    rows={4}
+                    rows={3}
                     placeholder="কাস্টমার প্রোডাক্টটিতে ক্লিক করলে যে বিস্তারিত টিউটোরিয়াল বা বিবরণ দেখতে পাবে তা এখানে লিখুন..."
                     className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-white resize-y transition-colors"
                   />
@@ -327,35 +448,36 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
                     placeholder="e.g. https://www.youtube.com/watch?v=dQw4w9WgXcQ"
                     className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-white transition-colors font-mono"
                   />
-                  <p className="text-[10px] text-neutral-500 mt-1">এখানে ইউটিউব ভিডিওর লিংক দিলে কাস্টমার ডিটেইলস পপ-আপ উইন্ডোতে ভিডিও টিউটোরিয়াল দেখতে পারবে।</p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-1">Discounted Price (বর্তমান দাম BDT)</label>
-                    <input 
-                      type="number"
-                      step="1"
-                      value={price}
-                      onChange={e => setPrice(e.target.value)}
-                      required
-                      placeholder="e.g. 4500"
-                      className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-white font-mono transition-colors"
-                    />
-                  </div>
+                {!isFree && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-1">Discounted Price (বর্তমান দাম BDT) *</label>
+                      <input 
+                        type="number"
+                        step="1"
+                        value={price}
+                        onChange={e => setPrice(e.target.value)}
+                        required={!isFree}
+                        placeholder="e.g. 500"
+                        className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-white font-mono transition-colors font-bold"
+                      />
+                    </div>
 
-                  <div>
-                    <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-1">Original Price (আসল দাম BDT - Optional)</label>
-                    <input 
-                      type="number"
-                      step="1"
-                      value={originalPrice}
-                      onChange={e => setOriginalPrice(e.target.value)}
-                      placeholder="e.g. 6000"
-                      className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-white font-mono transition-colors"
-                    />
+                    <div>
+                      <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-1">Original Price (আসল দাম BDT - Optional)</label>
+                      <input 
+                        type="number"
+                        step="1"
+                        value={originalPrice}
+                        onChange={e => setOriginalPrice(e.target.value)}
+                        placeholder="e.g. 1000"
+                        className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-white font-mono transition-colors"
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
@@ -371,21 +493,7 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
                   </div>
 
                   <div>
-                    <label className="text-xs font-bold uppercase tracking-wider text-rose-400 block mb-1">Stock Status (স্টক অবস্থা)</label>
-                    <select
-                      value={soldOut ? 'true' : 'false'}
-                      onChange={e => setSoldOut(e.target.value === 'true')}
-                      className="w-full bg-neutral-950 border border-rose-500/30 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-rose-500 font-bold transition-colors"
-                    >
-                      <option value="false">In Stock (স্টক আছে)</option>
-                      <option value="true">🔴 SOLD OUT (সোল্ড আউট)</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-4">
-                  <div>
-                    <label className="text-xs font-bold uppercase tracking-wider text-emerald-400 block mb-1">Hack Type (Category) *</label>
+                    <label className="text-xs font-bold uppercase tracking-wider text-emerald-400 block mb-1">Hack Category / Type *</label>
                     <select
                       value={category}
                       onChange={e => setCategory(e.target.value)}
@@ -393,6 +501,8 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
                     >
                       <option value="Colour Trading Hack">Colour Trading Hack</option>
                       <option value="Aviator Hack">Aviator Hack</option>
+                      <option value="Free Tools & APKs">Free Tools & APKs (ফ্রি টুলস)</option>
+                      <option value="All Games Predictor">All Games Predictor</option>
                     </select>
                   </div>
                 </div>

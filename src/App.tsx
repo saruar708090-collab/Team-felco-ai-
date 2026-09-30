@@ -3,6 +3,7 @@ import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { CustomerServiceModal } from './components/CustomerServiceModal';
 import { OrderTrackerModal } from './components/OrderTrackerModal';
+import { LiveSalesActivity } from './components/LiveSalesActivity';
 import { Home } from './pages/Home';
 import { GameSelect } from './pages/GameSelect';
 import { PaymentMethod } from './pages/PaymentMethod';
@@ -17,6 +18,7 @@ import { AdminCustomerService } from './pages/AdminCustomerService';
 import { AdminCoupons } from './pages/AdminCoupons';
 import { AdminGames } from './pages/AdminGames';
 import { AdminSiteCustomizer } from './pages/AdminSiteCustomizer';
+import { ProductDetailsPage } from './pages/ProductDetailsPage';
 import { OrderDraft, Order, StoreSettings } from './types';
 import { db, auth } from './firebase';
 import { doc, getDoc } from 'firebase/firestore';
@@ -140,6 +142,20 @@ export default function App() {
 
   // Render correct page
   const renderPage = () => {
+    if (currentRoute.startsWith('/product/')) {
+      const productId = currentRoute.replace('/product/', '').split('?')[0];
+      return (
+        <ProductDetailsPage
+          productId={productId}
+          navigate={navigate}
+          setOrderDraft={setOrderDraft}
+          theme={theme}
+          settings={settings}
+          onBack={() => navigate('/')}
+        />
+      );
+    }
+
     switch (currentRoute) {
       case '/':
         return (
@@ -346,6 +362,9 @@ export default function App() {
               </div>
             </div>
           )}
+
+          {/* Live Sales & Customer Order Activity Notifications */}
+          <LiveSalesActivity />
         </>
       )}
 
