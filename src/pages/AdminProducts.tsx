@@ -195,7 +195,26 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
 
       await setDoc(doc(db, 'products', id), payload, { merge: true });
 
-      setSuccessMsg(editingProduct ? 'প্রোডাক্ট সফলভাবে আপডেট করা হয়েছে!' : 'নতুন প্রোডাক্ট সফলভাবে যুক্ত করা হয়েছে!');
+      // Automatically broadcast notification for new product launch
+      if (!editingProduct) {
+        try {
+          const notifId = `notif-prod-${id}-${Date.now().toString().slice(-4)}`;
+          await setDoc(doc(db, 'notifications', notifId), {
+            id: notifId,
+            title: `🚀 নতুন প্রোডাক্ট যুক্ত হয়েছে: ${name.trim()}`,
+            message: `${name.trim()} এখন ওয়েবসাইটে উপলভ্য!${!isFree ? ` মূল্য: ৳${finalPrice}.00` : ' সম্পূর্ণ ফ্রি ডাউনলোড করুন!'}`,
+            type: 'product',
+            badge: isFree ? 'FREE DOWNLOAD' : 'NEW PRODUCT',
+            link: `/product/${id}`,
+            active: true,
+            createdAt: new Date().toISOString()
+          });
+        } catch (notifErr) {
+          console.error('Failed to auto-create notification for new product', notifErr);
+        }
+      }
+
+      setSuccessMsg(editingProduct ? 'প্রোডাক্ট সফলভাবে আপডেট করা হয়েছে!' : 'নতুন প্রোডাক্ট সফলভাবে যুক্ত করা হয়েছে এবং ওয়েবসাইটে নোটিফিকেশন পাঠানো হয়েছে!');
       setTimeout(() => setSuccessMsg(null), 3500);
 
       setModalOpen(false);

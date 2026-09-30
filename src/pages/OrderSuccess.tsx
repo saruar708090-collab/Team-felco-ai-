@@ -48,7 +48,8 @@ export const OrderSuccess: React.FC<OrderSuccessProps> = ({ completedOrder, navi
       }
     }).catch(() => {});
 
-    const unsubOrder = onSnapshot(doc(db, 'orders', completedOrder.orderId), snap => {
+    const targetDocId = completedOrder.id || completedOrder.orderId;
+    const unsubOrder = onSnapshot(doc(db, 'orders', targetDocId), snap => {
       if (snap.exists()) {
         const data = snap.data() as Order;
         if (data.orderStatus === 'COMPLETED' && liveStatus !== 'COMPLETED') {
@@ -59,7 +60,7 @@ export const OrderSuccess: React.FC<OrderSuccessProps> = ({ completedOrder, navi
           });
         }
         setLiveStatus(data.orderStatus);
-        setCurrentOrder(data);
+        setCurrentOrder({ ...data, id: snap.id });
       }
     });
 
@@ -148,30 +149,30 @@ export const OrderSuccess: React.FC<OrderSuccessProps> = ({ completedOrder, navi
               onClick={handleCopyOrderId}
               className="font-mono font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1 cursor-pointer"
             >
-              <span>{completedOrder.orderId}</span>
+              <span>{currentOrder.orderId}</span>
               {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
             </button>
           </div>
           <div className="flex justify-between">
             <span className="text-neutral-400">Game Server:</span>
-            <span className="font-bold text-white">{completedOrder.selectedGame}</span>
+            <span className="font-bold text-white">{currentOrder.selectedGame}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-neutral-400">Package:</span>
-            <span className="font-bold text-white">{completedOrder.productName}</span>
+            <span className="font-bold text-white">{currentOrder.productName}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-neutral-400">Payment Method:</span>
-            <span className="font-bold text-emerald-400">{completedOrder.paymentMethod}</span>
+            <span className="font-bold text-emerald-400">{currentOrder.paymentMethod}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-neutral-400">Transaction ID:</span>
-            <span className="font-mono font-bold text-emerald-400">{completedOrder.paymentTrxId}</span>
+            <span className="font-mono font-bold text-emerald-400">{currentOrder.paymentTrxId}</span>
           </div>
-          {completedOrder.whatsappNumber && (
+          {currentOrder.whatsappNumber && (
             <div className="flex justify-between">
               <span className="text-neutral-400">WhatsApp:</span>
-              <span className="font-bold text-emerald-400 font-mono">{completedOrder.whatsappNumber}</span>
+              <span className="font-bold text-emerald-400 font-mono">{currentOrder.whatsappNumber}</span>
             </div>
           )}
           <div className="flex justify-between border-t border-neutral-800 pt-2 font-bold">
@@ -179,12 +180,39 @@ export const OrderSuccess: React.FC<OrderSuccessProps> = ({ completedOrder, navi
             <span className="text-emerald-400 font-mono text-sm">৳{currentOrder.finalAmount || 0}.00</span>
           </div>
 
-          {currentOrder.adminMessage && (
-            <div className="mt-3 p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs space-y-1">
-              <span className="font-black text-emerald-400 uppercase tracking-wider block">💬 অ্যাডমিনের মেসেজ / ভিআইপি কোড:</span>
-              <p className="text-white font-mono whitespace-pre-line leading-relaxed">{currentOrder.adminMessage}</p>
+          {/* Admin message display */}
+          {currentOrder.adminMessage ? (
+            <div className={`mt-3 p-3.5 rounded-xl text-xs space-y-1.5 border text-left ${
+              isRejected 
+                ? 'bg-rose-500/10 border-rose-500/30' 
+                : 'bg-emerald-500/10 border-emerald-500/30'
+            }`}>
+              <div className="flex items-center justify-between">
+                <span className={`font-black uppercase tracking-wider block ${
+                  isRejected ? 'text-rose-400' : 'text-emerald-400'
+                }`}>
+                  {isRejected ? '⚠️ অর্ডার বাতিলের কারণ / মেসেজ:' : '💬 অ্যাডমিনের মেসেজ / ভিআইপি কোড:'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(currentOrder.adminMessage || '');
+                    alert('মেসেজ কপি হয়েছে!');
+                  }}
+                  className="px-2 py-0.5 bg-neutral-900 border border-neutral-700 rounded text-[10px] font-bold text-white uppercase cursor-pointer"
+                >
+                  Copy
+                </button>
+              </div>
+              <p className="text-white font-mono whitespace-pre-line leading-relaxed bg-black/50 p-2.5 rounded-lg border border-white/10 mt-1">
+                {currentOrder.adminMessage}
+              </p>
             </div>
-          )}
+          ) : isRejected ? (
+            <div className="mt-3 p-3.5 bg-rose-500/10 border border-rose-500/25 rounded-xl text-xs text-rose-300 text-left">
+              ভুল বা তথ্যের অসঙ্গতির কারণে অর্ডারটি বাতিল করা হয়েছে। অনুসন্ধানের জন্য সাপোর্টে যোগাযোগ করুন।
+            </div>
+          ) : null}
         </div>
 
         {/* Action Buttons */}
@@ -193,7 +221,7 @@ export const OrderSuccess: React.FC<OrderSuccessProps> = ({ completedOrder, navi
           {settings?.supportWhatsApp && (
             <a
               href={`https://wa.me/${settings.supportWhatsApp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
-                `হ্যালো অ্যাডমিন! আমি Team Felco ওয়েবসাইট থেকে #${completedOrder.orderId} (${completedOrder.productName} - ${completedOrder.selectedGame}) অর্ডার করেছি। আমার TrxID: ${completedOrder.paymentTrxId}। অনুগ্রহ করে ভেরিফাই করে দিন।`
+                `হ্যালো অ্যাডমিন! আমি Team Felco ওয়েবসাইট থেকে #${currentOrder.orderId} (${currentOrder.productName} - ${currentOrder.selectedGame}) অর্ডার করেছি। আমার TrxID: ${currentOrder.paymentTrxId}। অনুগ্রহ করে ভেরিফাই করে দিন।`
               )}`}
               target="_blank"
               rel="noopener noreferrer"

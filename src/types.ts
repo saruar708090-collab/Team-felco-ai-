@@ -139,3 +139,17 @@ export interface OrderDraft {
   productCategory?: string;
   productImageUrl?: string;
 }
+
+export interface NotificationItem {
+  id: string;
+  title: string;
+  message: string;
+  type: 'notice' | 'offer' | 'product' | 'order' | 'update';
+  badge?: string;
+  link?: string;
+  imageUrl?: string;
+  targetOrderId?: string;
+  targetTrxId?: string;
+  active: boolean;
+  createdAt: string;
+}

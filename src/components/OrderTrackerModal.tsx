@@ -29,26 +29,37 @@ export const OrderTrackerModal: React.FC<OrderTrackerModalProps> = ({ isOpen, on
 
     try {
       const trimmed = searchTerm.trim();
+      const upper = trimmed.toUpperCase();
       const ordersRef = collection(db, 'orders');
 
-      // First try searching by paymentTrxId
-      let q = query(ordersRef, where('paymentTrxId', '==', trimmed));
+      // First try searching by paymentTrxId (case-insensitive upper and raw)
+      let q = query(ordersRef, where('paymentTrxId', '==', upper));
       let querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty && upper !== trimmed) {
+        q = query(ordersRef, where('paymentTrxId', '==', trimmed));
+        querySnapshot = await getDocs(q);
+      }
 
       if (querySnapshot.empty) {
         // Try searching by orderId
-        q = query(ordersRef, where('orderId', '==', trimmed));
+        q = query(ordersRef, where('orderId', '==', upper));
         querySnapshot = await getDocs(q);
+        if (querySnapshot.empty && upper !== trimmed) {
+          q = query(ordersRef, where('orderId', '==', trimmed));
+          querySnapshot = await getDocs(q);
+        }
       }
 
       if (!querySnapshot.empty) {
         const docSnap = querySnapshot.docs[0];
         setSearchResult({ id: docSnap.id, ...(docSnap.data() as Order) });
       } else {
-        setError('No order found with this Transaction ID or Order ID. Please check and try again.');
+        setError('এই TrxID বা Order ID দিয়ে কোনো অর্ডার পাওয়া যায়নি। সঠিক তথ্য লিখে পুনরায় চেষ্টা করুন।');
       }
     } catch (err: any) {
-      setError('Error searching orders. Please try again later.');
+      console.error('Order tracking search error:', err);
+      setError('অর্ডার খুঁজতে সমস্যা হয়েছে। কিছুক্ষণ পর আবার চেষ্টা করুন।');
     } finally {
       setSearching(false);
     }
@@ -161,6 +172,50 @@ export const OrderTrackerModal: React.FC<OrderTrackerModalProps> = ({ isOpen, on
                 <span className="font-mono font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">{searchResult.paymentTrxId}</span>
               </div>
             </div>
+
+            {/* Admin Message / Code / Notice */}
+            {searchResult.adminMessage ? (
+              <div className={`p-4 rounded-xl space-y-2 border ${
+                searchResult.orderStatus === 'COMPLETED'
+                  ? 'bg-emerald-500/10 border-emerald-500/30 text-white'
+                  : searchResult.orderStatus === 'CANCELLED'
+                  ? 'bg-rose-500/10 border-rose-500/30 text-white'
+                  : 'bg-blue-500/10 border-blue-500/30 text-white'
+              }`}>
+                <div className="flex items-center justify-between">
+                  <span className={`text-xs font-black uppercase tracking-wider flex items-center gap-1.5 ${
+                    searchResult.orderStatus === 'COMPLETED'
+                      ? 'text-emerald-400'
+                      : searchResult.orderStatus === 'CANCELLED'
+                      ? 'text-rose-400'
+                      : 'text-blue-400'
+                  }`}>
+                    {searchResult.orderStatus === 'COMPLETED' ? '💬 অ্যাডমিনের মেসেজ / অ্যাক্টিভেশন কোড:' : searchResult.orderStatus === 'CANCELLED' ? '⚠️ অর্ডার বাতিলের কারণ / মেসেজ:' : '💬 অ্যাডমিনের বার্তা:'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(searchResult.adminMessage || '');
+                      alert('মেসেজটি কপি করা হয়েছে!');
+                    }}
+                    className="px-2.5 py-1 bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 rounded-lg text-[10px] font-bold text-white uppercase cursor-pointer"
+                  >
+                    Copy
+                  </button>
+                </div>
+                <div className="p-3 bg-black/60 rounded-lg border border-white/10 font-mono text-xs text-emerald-300 whitespace-pre-line leading-relaxed selection:bg-emerald-500 selection:text-black">
+                  {searchResult.adminMessage}
+                </div>
+              </div>
+            ) : searchResult.orderStatus === 'COMPLETED' ? (
+              <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/25 rounded-xl text-xs text-emerald-300">
+                ✅ আপনার অর্ডার সফলভাবে অ্যাপ্রুভ হয়েছে! ভিআইপি টুল ও সেটআপ গাইড বুঝে নিতে টেলিগ্রাম বা হোয়াটসঅ্যাপ সাপোর্টে মেসেজ দিন।
+              </div>
+            ) : searchResult.orderStatus === 'CANCELLED' ? (
+              <div className="p-3.5 bg-rose-500/10 border border-rose-500/25 rounded-xl text-xs text-rose-300">
+                ❌ ভুল বা অসম্পূর্ণ TrxID-এর কারণে অর্ডারটি বাতিল করা হয়েছে। সমাধান করতে অনুগ্রহ করে সাপোর্টে যোগাযোগ করুন।
+              </div>
+            ) : null}
           </div>
         )}
 

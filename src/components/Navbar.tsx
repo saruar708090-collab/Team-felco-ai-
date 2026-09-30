@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
-import { Menu, X, Headphones, Sun, Moon, Shield } from 'lucide-react';
-import { StoreSettings } from '../types';
+import React, { useState, useEffect } from 'react';
+import { Menu, X, Headphones, Sun, Moon, Shield, Bell } from 'lucide-react';
+import { StoreSettings, NotificationItem } from '../types';
+import { db } from '../firebase';
+import { collection, onSnapshot, query, limit } from 'firebase/firestore';
 
 interface NavbarProps {
   currentRoute: string;
   navigate: (route: string) => void;
   onOpenCustomerService: () => void;
   onOpenOrderTracker: () => void;
+  onOpenNotifications?: () => void;
   theme: 'dark' | 'light';
   toggleTheme: () => void;
   settings?: StoreSettings | null;
@@ -17,11 +20,34 @@ export const Navbar: React.FC<NavbarProps> = ({
   navigate, 
   onOpenCustomerService, 
   onOpenOrderTracker,
+  onOpenNotifications,
   theme,
   toggleTheme,
   settings
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const q = query(collection(db, 'notifications'), limit(25));
+    const unsubscribe = onSnapshot(q, (snap) => {
+      try {
+        const readIds: string[] = JSON.parse(localStorage.getItem('felco_read_notifs') || '[]');
+        let count = 0;
+        snap.forEach(d => {
+          const data = d.data() as NotificationItem;
+          if (data.active !== false && !readIds.includes(d.id)) {
+            count++;
+          }
+        });
+        setUnreadCount(count);
+      } catch {
+        setUnreadCount(snap.size);
+      }
+    }, () => {});
+
+    return () => unsubscribe();
+  }, []);
 
   const whatsAppLink = settings?.supportWhatsApp 
     ? `https://wa.me/${settings.supportWhatsApp.replace(/[^0-9]/g, '')}`
@@ -73,16 +99,31 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Track Order Button */}
           <button 
             onClick={onOpenOrderTracker}
-            className="bg-neutral-900 border border-neutral-800 hover:border-neutral-600 px-3 py-1.5 rounded-xl text-xs uppercase font-extrabold tracking-wider transition-colors text-white flex items-center gap-1.5 shadow"
+            className="bg-neutral-900 border border-neutral-800 hover:border-neutral-600 px-3 py-1.5 rounded-xl text-xs uppercase font-extrabold tracking-wider transition-colors text-white flex items-center gap-1.5 shadow cursor-pointer"
           >
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
             Track Order
           </button>
 
+          {/* Notification Bell Button (Desktop) */}
+          <button
+            onClick={onOpenNotifications}
+            className="relative bg-neutral-900 border border-neutral-800 hover:border-neutral-600 px-3 py-1.5 rounded-xl text-xs uppercase font-extrabold tracking-wider transition-colors text-white flex items-center gap-1.5 shadow cursor-pointer"
+            title="নোটিফিকেশন সেন্টার"
+          >
+            <Bell className="w-3.5 h-3.5 text-blue-400" />
+            <span>Notice & Offers</span>
+            {unreadCount > 0 && (
+              <span className="w-4 h-4 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center animate-pulse">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </button>
+
           {/* Customer Service (Separate) */}
           <button 
             onClick={onOpenCustomerService}
-            className="bg-neutral-900 border border-neutral-800 hover:border-neutral-600 px-3 py-1.5 rounded-xl text-xs uppercase font-extrabold tracking-wider transition-colors text-white flex items-center gap-1.5 shadow"
+            className="bg-neutral-900 border border-neutral-800 hover:border-neutral-600 px-3 py-1.5 rounded-xl text-xs uppercase font-extrabold tracking-wider transition-colors text-white flex items-center gap-1.5 shadow cursor-pointer"
           >
             <Headphones className="w-3.5 h-3.5 text-emerald-400" />
             Customer Service
@@ -92,7 +133,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={toggleTheme}
             title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            className="w-9 h-9 rounded-xl bg-neutral-900 border border-neutral-800 hover:border-neutral-600 flex items-center justify-center text-amber-400 transition-all shadow"
+            className="w-9 h-9 rounded-xl bg-neutral-900 border border-neutral-800 hover:border-neutral-600 flex items-center justify-center text-amber-400 transition-all shadow cursor-pointer"
           >
             {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4 text-blue-400" />}
           </button>
@@ -144,6 +185,20 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Mobile menu button & Theme toggle */}
         <div className="flex items-center md:hidden space-x-2">
+          {/* Mobile Bell Button */}
+          <button
+            onClick={onOpenNotifications}
+            className="relative p-2 text-blue-400 bg-neutral-900 rounded-lg border border-neutral-800 cursor-pointer"
+            title="নোটিফিকেশন সেন্টার"
+          >
+            <Bell className="w-4 h-4" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border border-black animate-pulse">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </button>
+
           <button
             onClick={toggleTheme}
             className="p-2 text-amber-400 bg-neutral-900 rounded-lg border border-neutral-800"
@@ -162,6 +217,27 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Mobile dropdown */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-[#0a0a0c] border-b border-neutral-800 px-4 py-3 space-y-2 shadow-2xl">
+          <button 
+            onClick={() => { navigate('/'); setMobileMenuOpen(false); }}
+            className="block w-full text-left py-2 px-3 rounded-lg text-xs font-bold uppercase tracking-wider text-neutral-300 hover:bg-neutral-900 hover:text-white"
+          >
+            Home Store
+          </button>
+
+          <button 
+            onClick={() => { onOpenNotifications?.(); setMobileMenuOpen(false); }}
+            className="flex items-center justify-between w-full text-left py-2 px-3 rounded-lg text-xs font-bold uppercase tracking-wider bg-neutral-900 text-white border border-neutral-800"
+          >
+            <div className="flex items-center gap-2">
+              <Bell className="w-4 h-4 text-blue-400" />
+              <span>নোটিফিকেশন ও অফার</span>
+            </div>
+            {unreadCount > 0 && (
+              <span className="px-2 py-0.5 bg-red-500 text-white text-[10px] font-black rounded-full">
+                {unreadCount} নতুন
+              </span>
+            )}
+          </button>
           <button 
             onClick={() => { navigate('/'); setMobileMenuOpen(false); }}
             className="block w-full text-left py-2 px-3 rounded-lg text-xs font-bold uppercase tracking-wider text-neutral-300 hover:bg-neutral-900 hover:text-white"

@@ -13,6 +13,7 @@ import { AdminLogin } from './pages/AdminLogin';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { AdminProducts } from './pages/AdminProducts';
 import { AdminOrders } from './pages/AdminOrders';
+import { AdminNotifications } from './pages/AdminNotifications';
 import { AdminPaymentSettings } from './pages/AdminPaymentSettings';
 import { AdminCustomerService } from './pages/AdminCustomerService';
 import { AdminCoupons } from './pages/AdminCoupons';
@@ -20,6 +21,7 @@ import { AdminGames } from './pages/AdminGames';
 import { AdminSiteCustomizer } from './pages/AdminSiteCustomizer';
 import { AdminReviews } from './pages/AdminReviews';
 import { ProductDetailsPage } from './pages/ProductDetailsPage';
+import { NotificationModal } from './components/NotificationModal';
 import { OrderDraft, Order, StoreSettings } from './types';
 import { db, auth } from './firebase';
 import { doc, getDoc } from 'firebase/firestore';
@@ -32,6 +34,7 @@ export default function App() {
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
   const [isCustomerServiceOpen, setIsCustomerServiceOpen] = useState(false);
   const [isOrderTrackerOpen, setIsOrderTrackerOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [settings, setSettings] = useState<StoreSettings | null>(null);
   const [globalLoading, setGlobalLoading] = useState(true);
   const [isPopupDismissed, setIsPopupDismissed] = useState(false);
@@ -188,6 +191,8 @@ export default function App() {
         return <AdminGames currentRoute={currentRoute} navigate={navigate} />;
       case '/admin/orders':
         return <AdminOrders currentRoute={currentRoute} navigate={navigate} />;
+      case '/admin/notifications':
+        return <AdminNotifications currentRoute={currentRoute} navigate={navigate} />;
       case '/admin/payment-settings':
         return <AdminPaymentSettings currentRoute={currentRoute} navigate={navigate} />;
       case '/admin/site-customizer':
@@ -223,6 +228,7 @@ export default function App() {
           navigate={navigate} 
           onOpenCustomerService={() => setIsCustomerServiceOpen(true)} 
           onOpenOrderTracker={() => setIsOrderTrackerOpen(true)}
+          onOpenNotifications={() => setIsNotificationsOpen(true)}
           theme={theme}
           toggleTheme={toggleTheme}
           settings={settings}
@@ -287,6 +293,13 @@ export default function App() {
           <OrderTrackerModal
             isOpen={isOrderTrackerOpen}
             onClose={() => setIsOrderTrackerOpen(false)}
+          />
+
+          <NotificationModal
+            isOpen={isNotificationsOpen}
+            onClose={() => setIsNotificationsOpen(false)}
+            navigate={navigate}
+            onOpenOrderTracker={() => setIsOrderTrackerOpen(true)}
           />
 
           {/* ULTRA-PREMIUM ENTRY NOTICE POPUP MODAL */}

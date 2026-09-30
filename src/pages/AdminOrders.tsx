@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { AdminLayout } from './AdminLayout';
 import { Order } from '../types';
 import { db, handleFirestoreError, OperationType } from '../firebase';
-import { collection, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { Eye, CheckCircle2, Clock, XCircle, RefreshCw, X, ExternalLink, Zap, Copy, Check, Smartphone, Trash2 } from 'lucide-react';
+import { collection, getDocs, doc, updateDoc, deleteDoc, setDoc, query, where } from 'firebase/firestore';
+import { Eye, CheckCircle2, Clock, XCircle, RefreshCw, X, ExternalLink, Zap, Copy, Check, Smartphone, Trash2, MessageSquare, Send, AlertTriangle } from 'lucide-react';
 import { parsePaymentSms, registerPaymentAndAutoVerify } from '../utils/smsParser';
 
 interface AdminOrdersProps {
@@ -16,6 +16,20 @@ export const AdminOrders: React.FC<AdminOrdersProps> = ({ currentRoute, navigate
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
+
+  // Status Action Modal (for adding message when approving or rejecting)
+  const [statusModal, setStatusModal] = useState<{
+    isOpen: boolean;
+    order: Order | null;
+    targetStatus: Order['orderStatus'];
+    message: string;
+  }>({
+    isOpen: false,
+    order: null,
+    targetStatus: 'COMPLETED',
+    message: ''
+  });
 
   // Auto-Verify SMS states
   const [smsInput, setSmsInput] = useState('');
@@ -126,22 +140,100 @@ export const AdminOrders: React.FC<AdminOrdersProps> = ({ currentRoute, navigate
     }
   };
 
+  const handleOpenStatusModal = (order: Order, targetStatus: Order['orderStatus']) => {
+    let defaultMsg = '';
+    if (targetStatus === 'COMPLETED') {
+      const cleanGame = (order.selectedGame || 'FELCO').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+      const randomCode = Math.floor(1000 + Math.random() * 9000);
+      defaultMsg = `আপনার ভিআইপি কোড: VIP-${cleanGame}-${randomCode}\nটেলিগ্রাম সাপোর্ট থেকে ফাইল ও সেটআপ গাইড বুঝে নিন। ধন্যবাদ!`;
+    } else if (targetStatus === 'CANCELLED') {
+      defaultMsg = `আপনার দেওয়া ট্রানজেকশন আইডি (TrxID) বা পেমেন্ট তথ্যে গরমিল পাওয়া গেছে। সঠিক TrxID দিয়ে টেলিগ্রাম বা হোয়াটসঅ্যাপে যোগাযোগ করুন।`;
+    } else if (targetStatus === 'PROCESSING') {
+      defaultMsg = `আপনার পেমেন্ট ভেরিফাই করা হচ্ছে, অনুগ্রহ করে ৫ মিনিট অপেক্ষা করুন।`;
+    }
+    
+    if (order.adminMessage && order.adminMessage.trim()) {
+      defaultMsg = order.adminMessage;
+    }
+
+    setStatusModal({
+      isOpen: true,
+      order,
+      targetStatus,
+      message: defaultMsg
+    });
+  };
+
   const handleUpdateStatus = async (orderId: string, newStatus: Order['orderStatus'], adminMsg?: string) => {
     try {
+      setUpdatingOrderId(orderId);
+      const target = orders.find(o => o.orderId === orderId || o.id === orderId);
+      const docId = target?.id || target?.orderId || orderId;
+
       const updatePayload: any = {
         orderStatus: newStatus,
         updatedAt: new Date().toISOString()
       };
       if (adminMsg !== undefined) {
-        updatePayload.adminMessage = adminMsg;
+        updatePayload.adminMessage = adminMsg.trim();
       }
-      await updateDoc(doc(db, 'orders', orderId), updatePayload);
-      fetchOrders();
-      if (selectedOrder && selectedOrder.orderId === orderId) {
-        setSelectedOrder(prev => prev ? { ...prev, orderStatus: newStatus, adminMessage: adminMsg !== undefined ? adminMsg : prev.adminMessage } : null);
+
+      // Robust Firestore update
+      try {
+        await updateDoc(doc(db, 'orders', docId), updatePayload);
+      } catch (docErr: any) {
+        // Fallback: Query by orderId
+        const q = query(collection(db, 'orders'), where('orderId', '==', orderId));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          await updateDoc(doc(db, 'orders', snap.docs[0].id), updatePayload);
+        } else {
+          throw docErr;
+        }
       }
-    } catch (err) {
+
+      // Auto-create notification if completed or cancelled so customer sees it
+      if (newStatus === 'COMPLETED' || newStatus === 'CANCELLED') {
+        try {
+          const notifId = `notif-order-${orderId}-${Date.now().toString().slice(-4)}`;
+          const isApproved = newStatus === 'COMPLETED';
+          await setDoc(doc(db, 'notifications', notifId), {
+            id: notifId,
+            title: isApproved ? `✅ অর্ডার #${orderId} অনুমোদিত হয়েছে!` : `❌ অর্ডার #${orderId} বাতিল হয়েছে!`,
+            message: adminMsg && adminMsg.trim() ? adminMsg.trim() : (isApproved ? 'আপনার ভিআইপি টুল অ্যাক্টিভেশন সফল হয়েছে।' : 'পেমেন্ট তথ্যের অসঙ্গতির কারণে অর্ডারটি বাতিল হয়েছে।'),
+            type: 'order',
+            badge: isApproved ? 'APPROVED' : 'CANCELLED',
+            targetOrderId: orderId,
+            targetTrxId: target?.paymentTrxId || '',
+            link: '',
+            active: true,
+            createdAt: new Date().toISOString()
+          });
+        } catch (notifErr) {
+          console.error('Failed to create notification for order status', notifErr);
+        }
+      }
+
+      await fetchOrders();
+      if (selectedOrder && (selectedOrder.orderId === orderId || selectedOrder.id === orderId)) {
+        setSelectedOrder(prev => prev ? { 
+          ...prev, 
+          orderStatus: newStatus, 
+          adminMessage: adminMsg !== undefined ? adminMsg.trim() : prev.adminMessage 
+        } : null);
+      }
+
+      setStatusModal(prev => ({ ...prev, isOpen: false }));
+      setVerifyFeedback({
+        type: 'success',
+        message: `✅ অর্ডার #${orderId} সফলভাবে ${newStatus === 'COMPLETED' ? 'কমপ্লিট (অনুমোদিত)' : newStatus === 'CANCELLED' ? 'বাতিল' : newStatus} করা হয়েছে এবং মেসেজ ওয়েবসাইটে কাস্টমারের কাছে সেভ হয়েছে!`
+      });
+      setTimeout(() => setVerifyFeedback(null), 5000);
+    } catch (err: any) {
+      console.error('Error updating order status', err);
       handleFirestoreError(err, OperationType.UPDATE, `orders/${orderId}`);
+    } finally {
+      setUpdatingOrderId(null);
     }
   };
 
@@ -338,23 +430,30 @@ export const AdminOrders: React.FC<AdminOrdersProps> = ({ currentRoute, navigate
                       </td>
                       <td className="p-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          {order.orderStatus === 'PENDING' && (
+                          {order.orderStatus === 'PENDING' ? (
                             <>
                               <button
-                                onClick={() => handleUpdateStatus(order.orderId, 'COMPLETED')}
+                                onClick={() => handleOpenStatusModal(order, 'COMPLETED')}
                                 title="Approve Order"
-                                className="px-2.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-black rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors"
+                                className="px-2.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-black rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer"
                               >
                                 Approve
                               </button>
                               <button
-                                onClick={() => handleUpdateStatus(order.orderId, 'CANCELLED')}
+                                onClick={() => handleOpenStatusModal(order, 'CANCELLED')}
                                 title="Reject Order"
-                                className="px-2.5 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors"
+                                className="px-2.5 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer"
                               >
                                 Reject
                               </button>
                             </>
+                          ) : (
+                            <button
+                              onClick={() => handleOpenStatusModal(order, order.orderStatus === 'COMPLETED' ? 'CANCELLED' : 'COMPLETED')}
+                              className="px-2 py-1 bg-neutral-900 border border-neutral-800 hover:border-neutral-700 text-neutral-400 hover:text-white rounded-lg text-[10px] font-bold"
+                            >
+                              Status বদলান
+                            </button>
                           )}
                           <button
                             onClick={() => setSelectedOrder(order)}
@@ -376,6 +475,158 @@ export const AdminOrders: React.FC<AdminOrdersProps> = ({ currentRoute, navigate
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {/* Quick Status Action & Message Modal */}
+        {statusModal.isOpen && statusModal.order && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+            <div className="bg-neutral-900 border border-neutral-800 text-white w-full max-w-lg rounded-2xl p-6 shadow-2xl space-y-4 relative">
+              <div className="flex items-center justify-between pb-3 border-b border-neutral-800">
+                <div className="flex items-center gap-2">
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
+                    statusModal.targetStatus === 'COMPLETED' 
+                      ? 'bg-emerald-500/20 text-emerald-400' 
+                      : 'bg-rose-500/20 text-rose-400'
+                  }`}>
+                    {statusModal.targetStatus === 'COMPLETED' ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
+                  </div>
+                  <div>
+                    <h3 className="text-base font-black uppercase">
+                      {statusModal.targetStatus === 'COMPLETED' ? 'অর্ডার অনুমোদন (Approve Order)' : 'অর্ডার বাতিল (Reject Order)'}
+                    </h3>
+                    <p className="text-[11px] text-neutral-400 font-mono">
+                      #{statusModal.order.orderId} • {statusModal.order.productName} ({statusModal.order.selectedGame})
+                    </p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setStatusModal(prev => ({ ...prev, isOpen: false }))}
+                  className="text-neutral-400 hover:text-white"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Message Input */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 flex items-center justify-between">
+                  <span>ইউজারের জন্য মেসেজ (ওয়েবসাইটে প্রদর্শিত হবে):</span>
+                  <span className="text-[10px] text-emerald-400 lowercase">কাস্টমার সরাসরি দেখবে</span>
+                </label>
+                <textarea
+                  value={statusModal.message}
+                  onChange={(e) => setStatusModal(prev => ({ ...prev, message: e.target.value }))}
+                  rows={4}
+                  className="w-full bg-black border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-emerald-500 leading-relaxed font-mono"
+                  placeholder="এখানে আপনার মেসেজ বা কোড লিখুন..."
+                />
+              </div>
+
+              {/* Preset buttons */}
+              <div className="space-y-1.5">
+                <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block">
+                  কুইক মেসেজ টেমপ্লেট:
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {statusModal.targetStatus === 'COMPLETED' ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const cleanGame = (statusModal.order?.selectedGame || 'FELCO').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+                          const randomCode = Math.floor(1000 + Math.random() * 9000);
+                          setStatusModal(prev => ({ 
+                            ...prev, 
+                            message: `আপনার ভিআইপি কোড: VIP-${cleanGame}-${randomCode}\nটেলিগ্রাম সাপোর্ট থেকে ফাইল ও সেটআপ গাইড বুঝে নিন। ধন্যবাদ!` 
+                          }));
+                        }}
+                        className="px-2.5 py-1 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 rounded-lg text-[10px] font-bold"
+                      >
+                        🔑 ভিআইপি কোড জেনারেট
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setStatusModal(prev => ({ 
+                          ...prev, 
+                          message: `আপনার অর্ডারটি সফলভাবে এপ্রুভ করা হয়েছে। অনুগ্রহ করে আপনার টেলিগ্রাম ইনবক্স চেক করুন, সেখানে সব ফাইল দেওয়া হয়েছে।` 
+                        }))}
+                        className="px-2.5 py-1 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 rounded-lg text-[10px] font-bold"
+                      >
+                        📲 টেলিগ্রামে ফাইল দেওয়া হয়েছে
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setStatusModal(prev => ({ 
+                          ...prev, 
+                          message: `আপনার পেমেন্ট ভেরিফাই হয়েছে। আপনার হোয়াটসঅ্যাপ নাম্বারে ফাইল ও ভিআইপি কোড পাঠিয়ে দেওয়া হয়েছে।` 
+                        }))}
+                        className="px-2.5 py-1 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 rounded-lg text-[10px] font-bold"
+                      >
+                        💬 হোয়াটসঅ্যাপে দেওয়া হয়েছে
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setStatusModal(prev => ({ 
+                          ...prev, 
+                          message: `আপনার দেওয়া ট্রানজেকশন আইডি (TrxID) বিকাশ/নগদে পাওয়া যায়নি। সঠিক TrxID দিয়ে পুনরায় চেষ্টা করুন বা সাপোর্টে মেসেজ দিন।` 
+                        }))}
+                        className="px-2.5 py-1 bg-neutral-800 hover:bg-neutral-700 text-rose-300 rounded-lg text-[10px] font-bold"
+                      >
+                        ❌ ভুল TrxID
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setStatusModal(prev => ({ 
+                          ...prev, 
+                          message: `আপনার পাঠানো টাকা স্টেটমেন্টে জমা হয়নি। আপনার পেমেন্টের সঠিক স্ক্রিনশট ও তথ্য দিয়ে সাপোর্টে যোগাযোগ করুন।` 
+                        }))}
+                        className="px-2.5 py-1 bg-neutral-800 hover:bg-neutral-700 text-rose-300 rounded-lg text-[10px] font-bold"
+                      >
+                        💸 টাকা জমা হয়নি
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setStatusModal(prev => ({ 
+                          ...prev, 
+                          message: `নির্ধারিত মূল্যের চেয়ে কম টাকা পাঠানো হয়েছে। অবশিষ্ট টাকা পরিশোধ করে সাপোর্টে মেসেজ দিন।` 
+                        }))}
+                        className="px-2.5 py-1 bg-neutral-800 hover:bg-neutral-700 text-rose-300 rounded-lg text-[10px] font-bold"
+                      >
+                        📉 টাকা কম এসেছে
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-neutral-800">
+                <button
+                  type="button"
+                  onClick={() => setStatusModal(prev => ({ ...prev, isOpen: false }))}
+                  className="px-4 py-2.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                >
+                  বাতিল করুন
+                </button>
+                <button
+                  type="button"
+                  disabled={updatingOrderId === statusModal.order.orderId}
+                  onClick={() => handleUpdateStatus(statusModal.order!.orderId, statusModal.targetStatus, statusModal.message)}
+                  className={`px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2 ${
+                    statusModal.targetStatus === 'COMPLETED'
+                      ? 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-lg shadow-emerald-500/20'
+                      : 'bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-600/20'
+                  }`}
+                >
+                  {updatingOrderId === statusModal.order.orderId && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
+                  <span>{statusModal.targetStatus === 'COMPLETED' ? 'মেসেজসহ অ্যাপ্রুভ করুন' : 'মেসেজসহ বাতিল করুন'}</span>
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -492,20 +743,55 @@ export const AdminOrders: React.FC<AdminOrdersProps> = ({ currentRoute, navigate
                 {/* Status Changer & Admin Message */}
                 <div className="space-y-4 pt-2 border-t border-neutral-800">
                   <div>
-                    <label className="text-xs font-bold uppercase tracking-wider text-neutral-400 block mb-1.5">
-                      Send Message to User (ইউজারের জন্য বার্তা / ভিআইপি কোড / নোট):
-                    </label>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-xs font-bold uppercase tracking-wider text-neutral-400">
+                        Send Message to User (ইউজারের জন্য বার্তা / ভিআইপি কোড / নোট):
+                      </label>
+                      <span className="text-[10px] text-emerald-400 font-bold">
+                        এটি কাস্টমার ওয়েবসাইটে দেখতে পাবেন
+                      </span>
+                    </div>
                     <textarea
                       value={selectedOrder.adminMessage || ''}
                       onChange={(e) => setSelectedOrder({ ...selectedOrder, adminMessage: e.target.value })}
                       placeholder="এখানে আপনার ভিআইপি অ্যাক্টিভেশন কোড, ডাউনলোড লিংক অথবা রিজেক্ট হওয়ার কারণ লিখুন..."
                       rows={3}
-                      className="w-full bg-black border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-emerald-500"
+                      className="w-full bg-black border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
                     />
+
+                    {/* Quick Template pills */}
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const cleanGame = (selectedOrder.selectedGame || 'FELCO').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+                          const randomCode = Math.floor(1000 + Math.random() * 9000);
+                          setSelectedOrder({
+                            ...selectedOrder,
+                            adminMessage: `আপনার ভিআইপি কোড: VIP-${cleanGame}-${randomCode}\nটেলিগ্রাম সাপোর্ট থেকে ফাইল ও সেটআপ গাইড বুঝে নিন। ধন্যবাদ!`
+                          });
+                        }}
+                        className="px-2 py-0.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded text-[10px] font-bold"
+                      >
+                        + ভিআইপি কোড টেমপ্লেট
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedOrder({
+                            ...selectedOrder,
+                            adminMessage: `আপনার দেওয়া TrxID বা পেমেন্ট তথ্যে গরমিল পাওয়া গেছে। অনুগ্রহ করে সঠিক TrxID দিয়ে টেলিগ্রাম বা হোয়াটসঅ্যাপে যোগাযোগ করুন।`
+                          });
+                        }}
+                        className="px-2 py-0.5 bg-neutral-800 hover:bg-neutral-700 text-rose-300 rounded text-[10px] font-bold"
+                      >
+                        + ভুল TrxID কারণ
+                      </button>
+                    </div>
                   </div>
 
                   <div>
-                    <span className="text-xs font-bold uppercase tracking-wider text-neutral-400 block mb-2">Update Order Status</span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-neutral-400 block mb-2">Update Order Status (স্ট্যাটাস নির্বাচন ও সেভ করুন)</span>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       {(['PENDING', 'PROCESSING', 'COMPLETED', 'CANCELLED'] as const).map(status => {
                         const isActive = selectedOrder.orderStatus === status;
@@ -513,13 +799,38 @@ export const AdminOrders: React.FC<AdminOrdersProps> = ({ currentRoute, navigate
                           <button
                             key={status}
                             onClick={() => handleUpdateStatus(selectedOrder.orderId, status, selectedOrder.adminMessage)}
-                            className={`py-2.5 px-3 rounded-xl text-xs font-black uppercase tracking-wider border transition-all cursor-pointer ${isActive ? 'bg-white text-black border-white shadow-md' : 'bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-neutral-600 hover:text-white'}`}
+                            className={`py-2.5 px-3 rounded-xl text-xs font-black uppercase tracking-wider border transition-all cursor-pointer ${
+                              isActive 
+                                ? status === 'COMPLETED'
+                                  ? 'bg-emerald-500 text-black border-emerald-400 shadow-md'
+                                  : status === 'CANCELLED'
+                                  ? 'bg-rose-600 text-white border-rose-500 shadow-md'
+                                  : 'bg-white text-black border-white shadow-md'
+                                : 'bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-neutral-600 hover:text-white'
+                            }`}
                           >
                             {status}
                           </button>
                         );
                       })}
                     </div>
+                  </div>
+
+                  {/* Explicit Save Button */}
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      disabled={updatingOrderId === selectedOrder.orderId}
+                      onClick={() => handleUpdateStatus(selectedOrder.orderId, selectedOrder.orderStatus, selectedOrder.adminMessage)}
+                      className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase text-xs tracking-wider rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      {updatingOrderId === selectedOrder.orderId ? (
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Check className="w-4 h-4 stroke-[3]" />
+                      )}
+                      <span>মেসেজ ও স্ট্যাটাস সংরক্ষণ করুন (Save & Send)</span>
+                    </button>
                   </div>
                 </div>
               </div>

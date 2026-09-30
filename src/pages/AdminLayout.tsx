@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Package, ShoppingCart, CreditCard, Headphones, Settings as SettingsIcon, LogOut, Shield, Percent, Gamepad2, Palette, Star } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, CreditCard, Headphones, Settings as SettingsIcon, LogOut, Shield, Percent, Gamepad2, Palette, Star, Bell } from 'lucide-react';
 import { auth } from '../firebase';
 
 interface AdminLayoutProps {
@@ -19,6 +19,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ currentRoute, navigate
     { label: 'Products', route: '/admin/products', icon: Package },
     { label: 'Games & Servers', route: '/admin/games', icon: Gamepad2 },
     { label: 'Orders', route: '/admin/orders', icon: ShoppingCart },
+    { label: 'Notifications', route: '/admin/notifications', icon: Bell },
     { label: 'Coupons', route: '/admin/coupons', icon: Percent },
     { label: 'Payment Settings', route: '/admin/payment-settings', icon: CreditCard },
     { label: 'Reviews', route: '/admin/reviews', icon: Star },
