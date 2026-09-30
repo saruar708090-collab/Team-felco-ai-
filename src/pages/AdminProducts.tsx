@@ -260,9 +260,6 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
                       <span>{product.active ? 'Active' : 'Inactive'}</span>
                     </button>
                   </div>
-                  <p className="text-neutral-400 text-xs leading-relaxed mb-6 line-clamp-2">
-                    {product.description}
-                  </p>
                 </div>
 
                 <div className="flex items-center justify-end space-x-3 pt-4 border-t border-neutral-900">
@@ -307,18 +304,6 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ currentRoute, navi
                     required
                     placeholder="e.g. BDWIN VIP Colour Hack"
                     className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-white transition-colors"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-1">Description (সংক্ষিপ্ত বিবরণ)</label>
-                  <textarea 
-                    value={description}
-                    onChange={e => setDescription(e.target.value)}
-                    rows={2}
-                    required
-                    placeholder="প্রোডাক্ট কার্ডে দেখানোর জন্য সংক্ষিপ্ত বিবরণ..."
-                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-white resize-none transition-colors"
                   />
                 </div>
 

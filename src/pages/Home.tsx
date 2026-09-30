@@ -36,7 +36,7 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
     youtubeUrl: viewingProductDetails?.youtubeUrl
   });
 
-  const categories = ['All', 'HGNICE', 'DKWIN', 'BDWIN', '1X BET', 'CK444'];
+  const categories = ['All', 'Colour Trading Hack', 'Aviator Hack', 'HGNICE', 'DKWIN', 'BDWIN', '1X BET', 'CK444'];
 
   const defaultProducts: Product[] = [
     {
@@ -45,7 +45,7 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
       description: 'Advanced algorithmic pattern analyzer and probability calculator for color trading games. Real-time signal calculation with high precision success tracking.',
       price: 4500,
       imageUrl: 'https://images.unsplash.com/photo-1642543492481-44e81e3914a7?w=800&auto=format&fit=crop&q=60',
-      category: 'HGNICE',
+      category: 'Colour Trading Hack',
       active: true
     },
     {
@@ -54,7 +54,7 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
       description: 'Professional multiplier predictor and crash timing analytics tool for aviator games. Engineered for precision and real-time trend visualization.',
       price: 6500,
       imageUrl: 'https://images.unsplash.com/photo-1622979135225-d2ba269bc1df?w=800&auto=format&fit=crop&q=60',
-      category: '1X BET',
+      category: 'Aviator Hack',
       active: true
     }
   ];
@@ -303,9 +303,11 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
                     <div className="p-2.5 sm:p-3 flex-1 flex flex-col justify-between gap-1.5">
                       <div>
                         {/* Category Badge */}
-                        <span className="inline-block text-[8px] sm:text-[9px] font-bold uppercase px-2 py-0.5 rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 mb-1">
-                          {product.category || 'COLOUR TRADING HACK'}
-                        </span>
+                        <div className="flex items-center flex-wrap gap-1 mb-1">
+                          <span className="inline-block text-[8px] sm:text-[9px] font-bold uppercase px-2 py-0.5 rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-400">
+                            {product.category || 'COLOUR TRADING HACK'}
+                          </span>
+                        </div>
 
                         {/* Title */}
                         <h3 className={`text-xs sm:text-sm font-black uppercase tracking-tight line-clamp-1 group-hover:text-emerald-400 transition-colors ${
@@ -313,13 +315,6 @@ export const Home: React.FC<HomeProps> = ({ navigate, setOrderDraft, onOpenOrder
                         }`}>
                           {product.name}
                         </h3>
-
-                        {/* Summary / Description */}
-                        <p className={`text-[10px] line-clamp-2 mt-0.5 leading-relaxed ${
-                          isLight ? 'text-neutral-500' : 'text-neutral-400'
-                        }`}>
-                          {product.description}
-                        </p>
                       </div>
                     </div>
                   </div>

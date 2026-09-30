@@ -1,7 +1,7 @@
 export interface Product {
   id: string;
   name: string;
-  description: string;
+  description?: string;
   detailedDescription?: string;
   youtubeUrl?: string;
   price: number;
@@ -22,7 +22,7 @@ export interface Order {
   selectedGame: string;
   customerName: string;
   telegramId: string;
-  whatsappNumber: string;
+  whatsappNumber?: string;
   paymentMethod: string;
   paymentTrxId: string;
   paymentScreenshotUrl: string;
@@ -36,18 +36,27 @@ export interface Order {
 
 export interface StoreSettings {
   storeName: string;
-  supportWhatsApp: string;
+  supportWhatsApp?: string;
   supportTelegram: string;
+  telegramChannelUrl?: string;
+  telegramSupportUsername?: string;
   supportText: string;
   businessHours: string;
   bkashNumber: string;
+  bkashActive?: boolean;
   nagadNumber: string;
+  nagadActive?: boolean;
   rocketNumber: string;
+  rocketActive?: boolean;
+  autoVerifyEnabled?: boolean;
   paymentInstructions: string;
   scrollingNotice?: string;
   popupNoticeActive?: boolean;
+  popupNoticeTitle?: string;
   popupNoticeText?: string;
   popupNoticeImage?: string;
+  popupNoticeButtonText?: string;
+  popupNoticeButtonLink?: string;
   facebookUrl?: string;
   youtubeUrl?: string;
 }

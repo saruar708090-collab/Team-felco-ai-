@@ -32,7 +32,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             TF
           </div>
           <div>
-            <span className="font-black tracking-wider text-xs sm:text-sm block">TEAM FELCO</span>
+            <h1 className="font-black tracking-wider text-xs sm:text-sm block m-0">TEAM FELCO</h1>
             <span className="text-[8px] uppercase tracking-widest text-emerald-400 block font-bold">Official Store</span>
           </div>
         </div>

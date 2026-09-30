@@ -3,7 +3,7 @@ import { AdminLayout } from './AdminLayout';
 import { StoreSettings } from '../types';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { CheckCircle2, Upload, Trash2, Loader2, BellRing } from 'lucide-react';
+import { CheckCircle2, Upload, Trash2, Loader2, BellRing, SendHorizontal, Smartphone, Sparkles, MessageSquare } from 'lucide-react';
 
 interface AdminPaymentSettingsProps {
   currentRoute: string;
@@ -13,18 +13,29 @@ interface AdminPaymentSettingsProps {
 export const AdminPaymentSettings: React.FC<AdminPaymentSettingsProps> = ({ currentRoute, navigate }) => {
   const [settings, setSettings] = useState<StoreSettings>({
     storeName: 'TEAM FELCO STORE',
-    supportWhatsApp: '+8801000000000',
-    supportTelegram: '@TeamFelcoSupport',
+    supportWhatsApp: '',
+    supportTelegram: 'https://t.me/+NRQwX88nKUQxYWY1',
+    telegramChannelUrl: 'https://t.me/+NRQwX88nKUQxYWY1',
+    telegramSupportUsername: 'TeamFelcoAdmin',
     supportText: '24/7 Professional Support',
     businessHours: '24 Hours Active',
-    bkashNumber: '01700000000',
-    nagadNumber: '01800000000',
-    rocketNumber: '01900000000',
-    paymentInstructions: 'Send money to our personal merchant number via Send Money.',
+    bkashNumber: '01613562615',
+    bkashActive: true,
+    nagadNumber: '01613562615',
+    nagadActive: true,
+    rocketNumber: '01613562615',
+    rocketActive: true,
+    paymentInstructions: 'Send money to our personal number via Send Money.',
+    scrollingNotice: '🔥 TEAM FELCO OFFICIAL STORE এ আপনাকে স্বাগতম!',
     popupNoticeActive: false,
-    popupNoticeText: '',
-    popupNoticeImage: ''
+    popupNoticeTitle: '🔥 SPECIAL VIP OFFER',
+    popupNoticeText: 'আমাদের অফিসিয়াল টেলিগ্রাম চ্যানেলে জয়েন হয়ে প্রতিদিনের ফ্রি প্রিডিকশন ও লাইভ প্রুফ দেখুন!',
+    popupNoticeImage: '',
+    popupNoticeButtonText: 'Join Telegram VIP Channel',
+    popupNoticeButtonLink: 'https://t.me/+NRQwX88nKUQxYWY1',
+    youtubeUrl: 'https://youtube.com/@teamfelco_78?si=y8LNiJ9C1MUsNA9Z'
   });
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isUploadingPopupImg, setIsUploadingPopupImg] = useState(false);
@@ -41,7 +52,16 @@ export const AdminPaymentSettings: React.FC<AdminPaymentSettingsProps> = ({ curr
       setError(null);
       const docSnap = await getDoc(doc(db, 'settings', 'general'));
       if (docSnap.exists()) {
-        setSettings(docSnap.data() as StoreSettings);
+        const data = docSnap.data() as StoreSettings;
+        setSettings(prev => ({
+          ...prev,
+          ...data,
+          bkashActive: data.bkashActive !== false,
+          nagadActive: data.nagadActive !== false,
+          rocketActive: data.rocketActive !== false,
+          telegramChannelUrl: data.telegramChannelUrl || data.supportTelegram || 'https://t.me/+NRQwX88nKUQxYWY1',
+          telegramSupportUsername: data.telegramSupportUsername || 'TeamFelcoAdmin'
+        }));
       }
     } catch (err: any) {
       console.error('Error fetching settings', err);
@@ -69,7 +89,7 @@ export const AdminPaymentSettings: React.FC<AdminPaymentSettingsProps> = ({ curr
         const canvas = document.createElement('canvas');
         let width = img.width;
         let height = img.height;
-        const max_size = 800;
+        const max_size = 900;
 
         if (width > height) {
           if (width > max_size) {
@@ -88,7 +108,7 @@ export const AdminPaymentSettings: React.FC<AdminPaymentSettingsProps> = ({ curr
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
 
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
         setSettings(prev => ({
           ...prev,
           popupNoticeImage: dataUrl,
@@ -107,14 +127,19 @@ export const AdminPaymentSettings: React.FC<AdminPaymentSettingsProps> = ({ curr
     setSuccessMessage('');
     setError(null);
     try {
-      await setDoc(doc(db, 'settings', 'general'), settings, { merge: true });
+      const payload: StoreSettings = {
+        ...settings,
+        supportTelegram: settings.telegramChannelUrl || settings.supportTelegram
+      };
+
+      await setDoc(doc(db, 'settings', 'general'), payload, { merge: true });
       try {
-        localStorage.setItem('tf_cached_settings', JSON.stringify(settings));
+        localStorage.setItem('tf_cached_settings', JSON.stringify(payload));
       } catch {
         // Ignore storage write error
       }
-      setSuccessMessage('Settings updated successfully.');
-      setTimeout(() => setSuccessMessage(''), 3000);
+      setSuccessMessage('সব সেটিংস সফলভাবে সেভ করা হয়েছে!');
+      setTimeout(() => setSuccessMessage(''), 3500);
     } catch (err: any) {
       setError(err.message || String(err));
       handleFirestoreError(err, OperationType.WRITE, 'settings/general');
@@ -127,8 +152,8 @@ export const AdminPaymentSettings: React.FC<AdminPaymentSettingsProps> = ({ curr
     <AdminLayout currentRoute={currentRoute} navigate={navigate}>
       <div className="max-w-4xl mx-auto space-y-8">
         <div>
-          <span className="text-xs uppercase font-bold tracking-widest text-neutral-400 block mb-1">Configuration</span>
-          <h1 className="text-3xl font-black uppercase tracking-tight">Payment & Notice Settings</h1>
+          <span className="text-xs uppercase font-bold tracking-widest text-neutral-400 block mb-1">Store Control Panel</span>
+          <h1 className="text-3xl font-black uppercase tracking-tight">Website & Support Settings</h1>
         </div>
 
         {error && (
@@ -147,183 +172,335 @@ export const AdminPaymentSettings: React.FC<AdminPaymentSettingsProps> = ({ curr
         )}
 
         {successMessage && (
-          <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs flex items-center gap-2">
+          <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 text-emerald-400 text-xs flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 shrink-0" />
-            <span>{successMessage}</span>
+            <span className="font-bold">{successMessage}</span>
           </div>
         )}
 
         {loading ? (
           <div className="text-center py-12 text-neutral-500 text-xs">Loading settings...</div>
         ) : (
-          <form onSubmit={handleSave} className="bg-neutral-950 border border-neutral-900 rounded-2xl p-6 sm:p-8 space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-2">bKash Number (Optional)</label>
-                <input 
-                  type="text"
-                  value={settings.bkashNumber || ''}
-                  onChange={e => setSettings({ ...settings, bkashNumber: e.target.value })}
-                  placeholder="e.g. 017..."
-                  className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm font-mono text-white focus:outline-none focus:border-white"
-                />
-              </div>
+          <form onSubmit={handleSave} className="space-y-8">
 
-              <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-2">Nagad Number (Optional)</label>
-                <input 
-                  type="text"
-                  value={settings.nagadNumber || ''}
-                  onChange={e => setSettings({ ...settings, nagadNumber: e.target.value })}
-                  placeholder="e.g. 018..."
-                  className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm font-mono text-white focus:outline-none focus:border-white"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-2">Rocket Number (Optional)</label>
-                <input 
-                  type="text"
-                  value={settings.rocketNumber || ''}
-                  onChange={e => setSettings({ ...settings, rocketNumber: e.target.value })}
-                  placeholder="e.g. 019..."
-                  className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm font-mono text-white focus:outline-none focus:border-white"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-2">Payment Instructions</label>
-              <textarea 
-                value={settings.paymentInstructions}
-                onChange={e => setSettings({ ...settings, paymentInstructions: e.target.value })}
-                rows={3}
-                required
-                className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-white resize-none"
-              />
-              <span className="text-[10px] text-neutral-500 mt-1 block">These instructions will automatically display on the checkout payment page.</span>
-            </div>
-            
-            <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-emerald-400 block mb-2">Scrolling Notice (হোম পেজের চলমান নোটিশ)</label>
-              <textarea 
-                value={settings.scrollingNotice || ''}
-                onChange={e => setSettings({ ...settings, scrollingNotice: e.target.value })}
-                rows={2}
-                placeholder="হোম পেজের ওপরে যে লাইনটি আস্তে আস্তে যাবে সেটি এখানে লিখুন..."
-                className="w-full bg-neutral-900 border border-emerald-500/30 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 resize-none"
-              />
-              <span className="text-[10px] text-neutral-500 mt-1 block">ফাঁকা রাখলে হোম পেজে চলমান নোটিশ বার দেখাবে না।</span>
-            </div>
-
-            {/* Entry Popup Notice Section (Optional Photo + Text) */}
-            <div className="pt-6 border-t border-neutral-900 space-y-5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-neutral-900/60 border border-neutral-800 rounded-2xl p-4">
+            {/* SECTION 1: ENTRY POPUP NOTICE MANAGER */}
+            <div className="bg-neutral-950 border border-neutral-800 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl">
+              <div className="flex items-center justify-between border-b border-neutral-800 pb-4">
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${
-                    settings.popupNoticeActive
-                      ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400'
-                      : 'bg-neutral-800 border-neutral-700 text-neutral-400'
-                  }`}>
-                    <BellRing className="w-5 h-5" />
+                  <div className="w-10 h-10 rounded-2xl bg-blue-500/15 text-blue-400 flex items-center justify-center font-black">
+                    <Sparkles className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-white">
-                      Entry Popup Notice (সাইটে ঢোকার সাথে সাথে বড় নোটিশ)
-                    </h3>
-                    <p className="text-[11px] text-neutral-400 mt-0.5">
-                      ইচ্ছা করলে চালু রাখুন, আবার না চাইলে অফ করে রাখুন (ফটো বা টেক্সট যেকোনোটি দিতে পারবেন)।
-                    </p>
+                    <h2 className="text-lg font-black uppercase tracking-wide text-white">Entry Notice Popup Modal</h2>
+                    <p className="text-xs text-neutral-400">ওয়েবসাইটে ঢোকার সময় কাস্টমারকে যে নোটিশ বা অফার পপআপ দেখাবে</p>
                   </div>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => setSettings(prev => ({ ...prev, popupNoticeActive: !prev.popupNoticeActive }))}
-                  className={`px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition-all shrink-0 ${
-                    settings.popupNoticeActive
-                      ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20'
-                      : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'
-                  }`}
-                >
-                  {settings.popupNoticeActive ? '● পপ-আপ চালু আছে (ON)' : '○ পপ-আপ বন্ধ আছে (OFF)'}
-                </button>
+                
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <span className="text-xs font-bold uppercase text-neutral-400">
+                    {settings.popupNoticeActive ? '🟢 Active (চালু)' : '⚪ Off (বন্ধ)'}
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={!!settings.popupNoticeActive}
+                    onChange={e => setSettings(prev => ({ ...prev, popupNoticeActive: e.target.checked }))}
+                    className="w-5 h-5 accent-blue-600 rounded cursor-pointer"
+                  />
+                </label>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Gallery Image Upload */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block">
-                    Popup Photo (গ্যালারি থেকে ছবি দিন - Optional)
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-1">
+                    Popup Title (পপআপের শিরোনাম)
                   </label>
-                  <div className="flex flex-col gap-3">
-                    <label className="cursor-pointer bg-neutral-900 hover:bg-neutral-800 border border-dashed border-neutral-700 hover:border-emerald-500/50 rounded-xl p-4 flex flex-col items-center justify-center gap-2 transition-colors text-center">
-                      {isUploadingPopupImg ? (
-                        <>
-                          <Loader2 className="w-6 h-6 text-emerald-400 animate-spin" />
-                          <span className="text-xs text-neutral-400 font-bold">ছবি আপলোড হচ্ছে...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="w-6 h-6 text-emerald-400" />
-                          <span className="text-xs font-bold text-white">গ্যালারি থেকে ছবি সিলেক্ট করুন</span>
-                          <span className="text-[10px] text-neutral-500">শুধু লেখা দিতে চাইলে ছবি দেওয়ার দরকার নেই</span>
-                        </>
-                      )}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handlePopupImageUpload}
-                        className="hidden"
-                      />
-                    </label>
+                  <input
+                    type="text"
+                    value={settings.popupNoticeTitle || ''}
+                    onChange={e => setSettings(prev => ({ ...prev, popupNoticeTitle: e.target.value }))}
+                    placeholder="যেমন: 🔥 SPECIAL VIP OFFER বা নতুন নোটিশ"
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-xs sm:text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
+                  />
+                </div>
 
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-1">
+                    Popup Notice Text (পপআপের মূল মেসেজ / বিবরণ)
+                  </label>
+                  <textarea
+                    value={settings.popupNoticeText || ''}
+                    onChange={e => setSettings(prev => ({ ...prev, popupNoticeText: e.target.value }))}
+                    rows={3}
+                    placeholder="কাস্টমারদের জন্য বিস্তারিত অফার বা নোটিশ মেসেজ লিখুন..."
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-xs sm:text-sm text-white focus:outline-none focus:border-blue-500 resize-none transition-colors"
+                  />
+                </div>
+
+                {/* Popup Banner Photo Upload */}
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-1">
+                    Popup Banner Image (পপআপের ছবি)
+                  </label>
+
+                  <div className="space-y-3">
                     {settings.popupNoticeImage && (
-                      <div className="relative rounded-xl overflow-hidden border border-neutral-800 bg-neutral-900 p-2 flex items-center justify-between gap-3">
+                      <div className="relative rounded-2xl overflow-hidden border border-neutral-700 max-h-60 bg-black flex items-center justify-center">
                         <img
                           src={settings.popupNoticeImage}
-                          alt="Popup Preview"
-                          className="h-20 w-28 object-cover rounded-lg border border-neutral-800"
+                          alt="Popup Banner Preview"
+                          className="max-h-60 object-contain"
                         />
                         <button
                           type="button"
                           onClick={() => setSettings(prev => ({ ...prev, popupNoticeImage: '' }))}
-                          className="px-3 py-2 bg-red-500/15 hover:bg-red-500/25 text-red-400 border border-red-500/30 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
+                          className="absolute top-2 right-2 px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white font-bold text-xs rounded-xl flex items-center gap-1 shadow-lg"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
-                          <span>ছবি মুছুন</span>
+                          <span>Remove Photo</span>
                         </button>
                       </div>
                     )}
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <label className={`cursor-pointer flex items-center justify-center gap-2 px-4 py-3 rounded-xl border font-black uppercase text-[10px] tracking-widest transition-all ${
+                        isUploadingPopupImg ? 'bg-neutral-800 border-neutral-700 text-neutral-500' : 'bg-blue-500/10 border-blue-500/30 text-blue-400 hover:bg-blue-500/20'
+                      }`}>
+                        {isUploadingPopupImg ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                        <span>{isUploadingPopupImg ? 'Uploading Photo...' : 'Upload Photo from Gallery'}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handlePopupImageUpload}
+                          disabled={isUploadingPopupImg}
+                        />
+                      </label>
+
+                      <input
+                        type="url"
+                        value={settings.popupNoticeImage || ''}
+                        onChange={e => setSettings(prev => ({ ...prev, popupNoticeImage: e.target.value }))}
+                        placeholder="Or paste Direct Image URL..."
+                        className="bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
                   </div>
                 </div>
 
-                {/* Popup Text */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block">
-                    Popup Notice Text (নোটিশের লেখা - Optional)
-                  </label>
-                  <textarea
-                    value={settings.popupNoticeText || ''}
-                    onChange={e => setSettings({ ...settings, popupNoticeText: e.target.value })}
-                    rows={4}
-                    placeholder="পপ-আপ নোটিশে কোনো লেখা দিতে চাইলে এখানে লিখুন (অথবা শুধু ছবিও দিতে পারেন)..."
-                    className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 resize-none"
-                  />
-                  <span className="text-[10px] text-neutral-500 block">
-                    শুধু ছবি দেখাতে চাইলে এই ঘরটি ফাঁকা রাখতে পারেন।
-                  </span>
+                {/* Popup Action Button & Link */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-1">
+                      Button Text (বাটনের লেখা)
+                    </label>
+                    <input
+                      type="text"
+                      value={settings.popupNoticeButtonText || ''}
+                      onChange={e => setSettings(prev => ({ ...prev, popupNoticeButtonText: e.target.value }))}
+                      placeholder="e.g. Join Telegram VIP Channel"
+                      className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-1">
+                      Button Link URL (বাটনে চাপলে যে লিংকে যাবে)
+                    </label>
+                    <input
+                      type="url"
+                      value={settings.popupNoticeButtonLink || ''}
+                      onChange={e => setSettings(prev => ({ ...prev, popupNoticeButtonLink: e.target.value }))}
+                      placeholder="e.g. https://t.me/+NRQwX88nKUQxYWY1"
+                      className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-xs font-mono text-blue-400 focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-end pt-4 border-t border-neutral-900">
-              <button 
+            {/* SECTION 2: TELEGRAM & OFFICIAL SOCIAL CHANNELS */}
+            <div className="bg-neutral-950 border border-neutral-800 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl">
+              <div className="flex items-center gap-3 border-b border-neutral-800 pb-4">
+                <div className="w-10 h-10 rounded-2xl bg-cyan-500/15 text-cyan-400 flex items-center justify-center font-black">
+                  <SendHorizontal className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-black uppercase tracking-wide text-white">Telegram & Social Channels</h2>
+                  <p className="text-xs text-neutral-400">টেলিগ্রাম চ্যানেল, টেলিগ্রাম অ্যাডমিন আইডি ও সোশ্যাল লিংক কনফিগারেশন</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-cyan-400 block mb-1">
+                    Official Telegram Channel Link (টেলিগ্রাম চ্যানেল লিংক) *
+                  </label>
+                  <input
+                    type="url"
+                    value={settings.telegramChannelUrl || ''}
+                    onChange={e => setSettings(prev => ({ ...prev, telegramChannelUrl: e.target.value }))}
+                    placeholder="https://t.me/+NRQwX88nKUQxYWY1"
+                    required
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-xs font-mono text-white focus:outline-none focus:border-cyan-400"
+                  />
+                  <p className="text-[10px] text-neutral-500 mt-1">কাস্টমাররা এই লিংকে ক্লিক করে আপনার টেলিগ্রাম চ্যানেলে জয়েন হবে।</p>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-cyan-400 block mb-1">
+                    Telegram Support Admin ID / Link (টেলিগ্রাম অ্যাডমিন আইডি) *
+                  </label>
+                  <input
+                    type="text"
+                    value={settings.telegramSupportUsername || ''}
+                    onChange={e => setSettings(prev => ({ ...prev, telegramSupportUsername: e.target.value }))}
+                    placeholder="TeamFelcoAdmin অথবা https://t.me/TeamFelcoAdmin"
+                    required
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-xs font-mono text-white focus:outline-none focus:border-cyan-400"
+                  />
+                  <p className="text-[10px] text-neutral-500 mt-1">লাইভ সাপোর্টে কাস্টমাররা সরাসরি এই আইডিতে মেসেজ দিতে পারবে।</p>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-1">
+                    YouTube Channel Link (ইউটিউব লিংক)
+                  </label>
+                  <input
+                    type="url"
+                    value={settings.youtubeUrl || ''}
+                    onChange={e => setSettings(prev => ({ ...prev, youtubeUrl: e.target.value }))}
+                    placeholder="https://youtube.com/@teamfelco_78"
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-xs font-mono text-white focus:outline-none focus:border-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-1">
+                    Facebook Page Link (ফেসবুক লিংক - Optional)
+                  </label>
+                  <input
+                    type="url"
+                    value={settings.facebookUrl || ''}
+                    onChange={e => setSettings(prev => ({ ...prev, facebookUrl: e.target.value }))}
+                    placeholder="https://facebook.com/teamfelco"
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-xs font-mono text-white focus:outline-none focus:border-white"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* SECTION 3: PAYMENT NUMBERS (BKASH, NAGAD, ROCKET) */}
+            <div className="bg-neutral-950 border border-neutral-800 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl">
+              <div className="flex items-center gap-3 border-b border-neutral-800 pb-4">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center font-black">
+                  <Smartphone className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-black uppercase tracking-wide text-white">Payment Methods & Numbers</h2>
+                  <p className="text-xs text-neutral-400">বিকাশ, নগদ ও রকেট পার্সোনাল নাম্বার ও স্ট্যাটাস পরিচালনা করুন</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {/* bKash */}
+                <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-black text-[#DF146E] text-sm">bKash Personal</span>
+                    <input
+                      type="checkbox"
+                      checked={settings.bkashActive !== false}
+                      onChange={e => setSettings(prev => ({ ...prev, bkashActive: e.target.checked }))}
+                      className="w-4 h-4 accent-[#DF146E] rounded cursor-pointer"
+                    />
+                  </div>
+                  <input
+                    type="text"
+                    value={settings.bkashNumber || ''}
+                    onChange={e => setSettings(prev => ({ ...prev, bkashNumber: e.target.value }))}
+                    placeholder="01XXXXXXXXX"
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2.5 text-xs font-mono font-bold text-white focus:outline-none focus:border-[#DF146E]"
+                  />
+                </div>
+
+                {/* Nagad */}
+                <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-black text-[#F97316] text-sm">Nagad Personal</span>
+                    <input
+                      type="checkbox"
+                      checked={settings.nagadActive !== false}
+                      onChange={e => setSettings(prev => ({ ...prev, nagadActive: e.target.checked }))}
+                      className="w-4 h-4 accent-[#F97316] rounded cursor-pointer"
+                    />
+                  </div>
+                  <input
+                    type="text"
+                    value={settings.nagadNumber || ''}
+                    onChange={e => setSettings(prev => ({ ...prev, nagadNumber: e.target.value }))}
+                    placeholder="01XXXXXXXXX"
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2.5 text-xs font-mono font-bold text-white focus:outline-none focus:border-[#F97316]"
+                  />
+                </div>
+
+                {/* Rocket */}
+                <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-black text-[#A855F7] text-sm">Rocket Personal</span>
+                    <input
+                      type="checkbox"
+                      checked={settings.rocketActive !== false}
+                      onChange={e => setSettings(prev => ({ ...prev, rocketActive: e.target.checked }))}
+                      className="w-4 h-4 accent-[#A855F7] rounded cursor-pointer"
+                    />
+                  </div>
+                  <input
+                    type="text"
+                    value={settings.rocketNumber || ''}
+                    onChange={e => setSettings(prev => ({ ...prev, rocketNumber: e.target.value }))}
+                    placeholder="01XXXXXXXXX"
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2.5 text-xs font-mono font-bold text-white focus:outline-none focus:border-[#A855F7]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-1">
+                  Payment Instructions (পেমেন্ট নির্দেশিকা)
+                </label>
+                <input
+                  type="text"
+                  value={settings.paymentInstructions || ''}
+                  onChange={e => setSettings(prev => ({ ...prev, paymentInstructions: e.target.value }))}
+                  placeholder="Send money to our personal number via Send Money..."
+                  className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-white"
+                />
+              </div>
+            </div>
+
+            {/* SECTION 4: SCROLLING MARQUEE NOTICE */}
+            <div className="bg-neutral-950 border border-neutral-800 rounded-3xl p-6 sm:p-8 space-y-4 shadow-xl">
+              <div className="flex items-center gap-3 border-b border-neutral-800 pb-3">
+                <BellRing className="w-5 h-5 text-amber-400" />
+                <h2 className="text-base font-black uppercase tracking-wide text-white">Top Scrolling Notice (স্ক্রলিং নোটিশ)</h2>
+              </div>
+              <input
+                type="text"
+                value={settings.scrollingNotice || ''}
+                onChange={e => setSettings(prev => ({ ...prev, scrollingNotice: e.target.value }))}
+                placeholder="হোমপেজের ওপরে যে নোটিশ স্ক্রল করে চলবে..."
+                className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-xs sm:text-sm text-white focus:outline-none focus:border-amber-400"
+              />
+            </div>
+
+            {/* Save Button */}
+            <div className="flex justify-end pt-2">
+              <button
                 type="submit"
                 disabled={saving}
-                className="px-8 py-3.5 bg-white text-black font-extrabold uppercase text-xs tracking-widest rounded-xl hover:bg-neutral-200 transition-colors disabled:opacity-50"
+                className="px-8 py-4 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase text-xs sm:text-sm tracking-widest rounded-2xl transition-all shadow-xl shadow-emerald-500/20 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
               >
-                {saving ? 'Saving...' : 'Save Settings'}
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                <span>{saving ? 'Saving Settings...' : 'Save All Settings'}</span>
               </button>
             </div>
           </form>

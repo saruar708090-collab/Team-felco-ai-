@@ -48,8 +48,11 @@
         "supportText": { "type": "string" },
         "businessHours": { "type": "string" },
         "bkashNumber": { "type": "string" },
+        "bkashActive": { "type": "boolean" },
         "nagadNumber": { "type": "string" },
+        "nagadActive": { "type": "boolean" },
         "rocketNumber": { "type": "string" },
+        "rocketActive": { "type": "boolean" },
         "paymentInstructions": { "type": "string" },
         "scrollingNotice": { "type": "string", "maxLength": 500 }
       }
@@ -75,6 +78,23 @@
         "active": { "type": "boolean" }
       },
       "required": ["code", "discountType", "discountValue", "active"]
+    },
+    "PaymentSms": {
+      "title": "PaymentSms",
+      "description": "Incoming bKash, Nagad, and Rocket transaction SMS records for automatic order verification",
+      "type": "object",
+      "properties": {
+        "trxId": { "type": "string", "maxLength": 50 },
+        "amount": { "type": "number" },
+        "method": { "type": "string" },
+        "sender": { "type": "string" },
+        "rawSms": { "type": "string", "maxLength": 1000 },
+        "used": { "type": "boolean" },
+        "usedByOrderId": { "type": "string" },
+        "webhookKey": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["trxId", "amount", "used"]
     }
   },
   "firestore": {
@@ -97,6 +117,10 @@
     "/coupons/{couponId}": {
       "schema": { "$ref": "#/entities/Coupon" },
       "description": "Discount coupon codes"
+    },
+    "/payment_sms/{trxId}": {
+      "schema": { "$ref": "#/entities/PaymentSms" },
+      "description": "Verified incoming payment SMS records for auto-verification"
     }
   }
 }

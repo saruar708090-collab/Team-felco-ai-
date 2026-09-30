@@ -24,10 +24,25 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // ORDERS: Public read & create (customers placing & tracking orders). Only authenticated admins can update or delete.
+    // ORDERS: Public read & create. Auto-update to COMPLETED (if matching payment_sms exists) or CANCELLED (if auto-rejected).
     match /orders/{orderId} {
       allow read, create: if true;
-      allow update, delete: if isAdmin();
+      allow update: if isAdmin() || (
+        resource.data.orderStatus == 'PENDING' && (
+          (request.resource.data.orderStatus == 'COMPLETED' && exists(/databases/$(database)/documents/payment_sms/$(resource.data.paymentTrxId))) ||
+          request.resource.data.orderStatus == 'CANCELLED'
+        )
+      );
+      allow delete: if isAdmin();
+    }
+
+    // PAYMENT_SMS: Individual get allowed by exact TrxID for verification; list only for admins.
+    match /payment_sms/{trxId} {
+      allow get: if true;
+      allow list: if isAdmin();
+      allow create: if isAdmin() || request.resource.data.webhookKey == 'FELCO2026';
+      allow update: if isAdmin() || (resource.data.used == false && request.resource.data.used == true);
+      allow delete: if isAdmin();
     }
 
     // ADMINS: Admins can manage admins. Authenticated users can write/edit their own admin document during authentication.
