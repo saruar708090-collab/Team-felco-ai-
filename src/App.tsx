@@ -18,6 +18,7 @@ import { AdminCustomerService } from './pages/AdminCustomerService';
 import { AdminCoupons } from './pages/AdminCoupons';
 import { AdminGames } from './pages/AdminGames';
 import { AdminSiteCustomizer } from './pages/AdminSiteCustomizer';
+import { AdminReviews } from './pages/AdminReviews';
 import { ProductDetailsPage } from './pages/ProductDetailsPage';
 import { OrderDraft, Order, StoreSettings } from './types';
 import { db, auth } from './firebase';
@@ -195,6 +196,8 @@ export default function App() {
         return <AdminCustomerService currentRoute={currentRoute} navigate={navigate} />;
       case '/admin/coupons':
         return <AdminCoupons currentRoute={currentRoute} navigate={navigate} />;
+      case '/admin/reviews':
+        return <AdminReviews currentRoute={currentRoute} navigate={navigate} />;
       default:
         return (
           <Home 

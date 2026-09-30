@@ -3,7 +3,7 @@ import { AdminLayout } from './AdminLayout';
 import { GameItem } from '../types';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { collection, getDocs, doc, setDoc, deleteDoc, updateDoc } from 'firebase/firestore';
-import { Plus, Edit2, Trash2, CheckCircle2, Gamepad2, X, Loader2, Sparkles } from 'lucide-react';
+import { Plus, Edit2, Trash2, CheckCircle2, Gamepad2, X, Loader2, Sparkles, Upload } from 'lucide-react';
 
 interface AdminGamesProps {
   currentRoute: string;
@@ -80,11 +80,58 @@ export const AdminGames: React.FC<AdminGamesProps> = ({ currentRoute, navigate }
   const [subtitle, setSubtitle] = useState('');
   const [badgeBg, setBadgeBg] = useState('#1E293B');
   const [badgeText, setBadgeText] = useState('#FFFFFF');
+  const [logoUrl, setLogoUrl] = useState('');
   const [active, setActive] = useState(true);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
 
   useEffect(() => {
     fetchGames();
   }, []);
+
+  const handleGameImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 3 * 1024 * 1024) {
+      alert('ফাইল সাইজ ৩ এমবি (3MB)-এর নিচে হতে হবে।');
+      return;
+    }
+
+    setIsUploadingLogo(true);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const max_size = 400;
+
+        if (width > height) {
+          if (width > max_size) {
+            height *= max_size / width;
+            width = max_size;
+          }
+        } else {
+          if (height > max_size) {
+            width *= max_size / height;
+            height = max_size;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+        setLogoUrl(dataUrl);
+        setIsUploadingLogo(false);
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
 
   const fetchGames = async () => {
     try {
@@ -95,7 +142,6 @@ export const AdminGames: React.FC<AdminGamesProps> = ({ currentRoute, navigate }
       snap.forEach(d => list.push({ ...d.data(), id: d.id } as GameItem));
 
       if (list.length === 0) {
-        // Seed default games if first time
         for (const g of DEFAULT_INITIAL_GAMES) {
           await setDoc(doc(db, 'games', g.id), {
             ...g,
@@ -123,6 +169,7 @@ export const AdminGames: React.FC<AdminGamesProps> = ({ currentRoute, navigate }
     setSubtitle('Colour Server');
     setBadgeBg('#DF1B22');
     setBadgeText('#FFFFFF');
+    setLogoUrl('');
     setActive(true);
     setModalOpen(true);
   };
@@ -134,6 +181,7 @@ export const AdminGames: React.FC<AdminGamesProps> = ({ currentRoute, navigate }
     setSubtitle(game.subtitle || '');
     setBadgeBg(game.badgeBg || '#1E293B');
     setBadgeText(game.badgeText || '#FFFFFF');
+    setLogoUrl(game.logoUrl || '');
     setActive(game.active);
     setModalOpen(true);
   };
@@ -156,6 +204,7 @@ export const AdminGames: React.FC<AdminGamesProps> = ({ currentRoute, navigate }
         subtitle: subtitle.trim() || (type === 'colour_trading' ? 'Colour Server' : 'Aviator Server'),
         badgeBg,
         badgeText,
+        logoUrl: logoUrl.trim() || '',
         active,
         order: editingGame ? (editingGame.order || games.length + 1) : games.length + 1,
         updatedAt: new Date().toISOString()
@@ -384,6 +433,44 @@ export const AdminGames: React.FC<AdminGamesProps> = ({ currentRoute, navigate }
                     placeholder="e.g. Colour Server, VIP Server, 24 Server"
                     className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-emerald-500"
                   />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-1">
+                    Game Logo / Image URL (লোগো বা ছবির লিংক অথবা গ্যালারি থেকে আপলোড)
+                  </label>
+                  <div className="flex gap-2 items-center">
+                    <input
+                      type="url"
+                      value={logoUrl}
+                      onChange={e => setLogoUrl(e.target.value)}
+                      placeholder="https://example.com/logo.png"
+                      className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-emerald-500"
+                    />
+                    <label className="px-4 py-3 bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl text-xs font-bold cursor-pointer shrink-0 flex items-center gap-1.5 transition-colors">
+                      <Upload className="w-4 h-4 text-emerald-400" />
+                      <span>{isUploadingLogo ? 'আপলোড হচ্ছে...' : 'গ্যালারি'}</span>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={handleGameImageUpload} 
+                        className="hidden" 
+                      />
+                    </label>
+                  </div>
+                  {logoUrl && (
+                    <div className="mt-2 flex items-center gap-3 bg-black p-2 rounded-xl border border-neutral-800">
+                      <img src={logoUrl} alt="Logo Preview" className="w-8 h-8 rounded object-cover bg-neutral-900" />
+                      <span className="text-[10px] text-emerald-400 font-mono truncate flex-1">লোগো সংযুক্ত হয়েছে</span>
+                      <button 
+                        type="button" 
+                        onClick={() => setLogoUrl('')}
+                        className="text-red-400 text-[10px] font-bold hover:underline px-2"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">

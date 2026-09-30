@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { AdminLayout } from './AdminLayout';
 import { Order } from '../types';
 import { db, handleFirestoreError, OperationType } from '../firebase';
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
-import { Eye, CheckCircle2, Clock, XCircle, RefreshCw, X, ExternalLink, Zap, Copy, Check, Smartphone } from 'lucide-react';
+import { collection, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { Eye, CheckCircle2, Clock, XCircle, RefreshCw, X, ExternalLink, Zap, Copy, Check, Smartphone, Trash2 } from 'lucide-react';
 import { parsePaymentSms, registerPaymentAndAutoVerify } from '../utils/smsParser';
 
 interface AdminOrdersProps {
@@ -142,6 +142,19 @@ export const AdminOrders: React.FC<AdminOrdersProps> = ({ currentRoute, navigate
       }
     } catch (err) {
       handleFirestoreError(err, OperationType.UPDATE, `orders/${orderId}`);
+    }
+  };
+
+  const handleDeleteOrder = async (orderId: string) => {
+    if (!window.confirm(`আপনি কি নিশ্চিতভাবে অর্ডার #${orderId} ডিলিট করতে চান?`)) return;
+    try {
+      await deleteDoc(doc(db, 'orders', orderId));
+      setOrders(prev => prev.filter(o => o.orderId !== orderId));
+      if (selectedOrder && selectedOrder.orderId === orderId) {
+        setSelectedOrder(null);
+      }
+    } catch (err) {
+      handleFirestoreError(err, OperationType.DELETE, `orders/${orderId}`);
     }
   };
 
@@ -345,10 +358,17 @@ export const AdminOrders: React.FC<AdminOrdersProps> = ({ currentRoute, navigate
                           )}
                           <button
                             onClick={() => setSelectedOrder(order)}
-                            className="px-3 py-1.5 bg-neutral-900 border border-neutral-800 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-neutral-800 transition-colors flex items-center gap-1"
+                            className="px-3 py-1.5 bg-neutral-900 border border-neutral-800 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-neutral-800 transition-colors flex items-center gap-1 cursor-pointer"
                           >
                             <Eye className="w-3.5 h-3.5" />
                             <span>Details</span>
+                          </button>
+                          <button
+                            onClick={() => handleDeleteOrder(order.orderId)}
+                            className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors cursor-pointer"
+                            title="Delete Order"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </td>
