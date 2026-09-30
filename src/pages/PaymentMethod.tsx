@@ -100,12 +100,15 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({ orderDraft, setOrd
   };
 
   useEffect(() => {
+    if (propSettings) {
+      setSettings(propSettings);
+    }
     fetchSettings();
-  }, []);
+  }, [propSettings]);
 
   const fetchSettings = async () => {
     try {
-      const snap = await getDoc(doc(db, 'store_settings', 'main'));
+      const snap = await getDoc(doc(db, 'settings', 'general'));
       if (snap.exists()) {
         const data = snap.data() as StoreSettings;
         setSettings(data);
@@ -126,25 +129,30 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({ orderDraft, setOrd
       instructions: 'উক্ত নাম্বারে সেন্ড মানি (Send Money) করবেন এবং নির্ধারিত অর্থ প্রদান করবেন কম বা বেশি হলে অর্ডার সফল হবে না ✅',
       renderLogo: () => (
         <div className="flex flex-col items-center justify-center py-1">
-          {/* Mathematically precise 3D Origami bKash Bird inside deep pink container */}
-          <div className="w-12 h-12 rounded-xl bg-[#E2136E] flex items-center justify-center shadow-md border border-[#E2136E]/30 relative overflow-hidden active:scale-95 transition-transform">
-            <svg viewBox="0 0 100 100" className="w-8.5 h-8.5">
-              {/* Left Wing fold */}
-              <polygon points="15,35 45,38 45,62" fill="#FFFFFF" />
-              {/* Center spine fold */}
-              <polygon points="45,38 58,35 45,62" fill="#FCE7F3" />
-              {/* Main wing shadow panel */}
-              <polygon points="58,35 78,52 45,62" fill="#FFFFFF" />
-              {/* Head tip folder */}
-              <polygon points="78,52 92,49 86,55" fill="#FCE7F3" />
-              {/* Lower tail shadow fold */}
-              <polygon points="45,62 49,85 32,98" fill="#FCE7F3" />
-              {/* Central bird structure body */}
-              <polygon points="45,62 78,52 86,55 49,85" fill="#FFFFFF" />
-              {/* Tail wing stabilizer */}
-              <polygon points="49,85 74,72 86,55" fill="#FCE7F3" />
-            </svg>
-          </div>
+          {settings.bkashLogoUrl ? (
+            <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow-md border border-[#E2136E]/30 relative overflow-hidden p-1 active:scale-95 transition-transform">
+              <img src={settings.bkashLogoUrl} alt="bKash" className="w-full h-full object-contain" />
+            </div>
+          ) : (
+            <div className="w-12 h-12 rounded-xl bg-[#E2136E] flex items-center justify-center shadow-md border border-[#E2136E]/30 relative overflow-hidden active:scale-95 transition-transform">
+              <svg viewBox="0 0 100 100" className="w-8.5 h-8.5">
+                {/* Left Wing fold */}
+                <polygon points="15,35 45,38 45,62" fill="#FFFFFF" />
+                {/* Center spine fold */}
+                <polygon points="45,38 58,35 45,62" fill="#FCE7F3" />
+                {/* Main wing shadow panel */}
+                <polygon points="58,35 78,52 45,62" fill="#FFFFFF" />
+                {/* Head tip folder */}
+                <polygon points="78,52 92,49 86,55" fill="#FCE7F3" />
+                {/* Lower tail shadow fold */}
+                <polygon points="45,62 49,85 32,98" fill="#FCE7F3" />
+                {/* Central bird structure body */}
+                <polygon points="45,62 78,52 86,55 49,85" fill="#FFFFFF" />
+                {/* Tail wing stabilizer */}
+                <polygon points="49,85 74,72 86,55" fill="#FCE7F3" />
+              </svg>
+            </div>
+          )}
         </div>
       )
     },
@@ -158,17 +166,22 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({ orderDraft, setOrd
       instructions: 'উক্ত নাম্বারে সেন্ড মানি (Send Money) করবেন এবং নির্ধারিত অর্থ প্রদান করবেন কম বা বেশি হলে অর্ডার সফল হবে না ✅',
       renderLogo: () => (
         <div className="flex flex-col items-center justify-center py-1">
-          {/* Beautiful 3D Gradient Swirling Sun Flame of Nagad */}
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-[#F7941D] to-[#ED1C24] flex flex-col items-center justify-center shadow-md border border-[#ED1C24]/30 relative overflow-hidden p-0.5 active:scale-95 transition-transform">
-            <svg viewBox="0 0 100 100" className="w-7 h-7">
-              {/* Circular swirling rays */}
-              <path d="M50,15 A35,35 0 1,1 15,50 A35,35 0 0,1 50,15 M50,23 A27,27 0 1,0 77,50 A27,27 0 0,0 50,23 Z" fill="white" />
-              <circle cx="50" cy="50" r="10" fill="white" className="opacity-30" />
-              {/* Middle core flame */}
-              <path d="M44,42 C44,32 56,32 56,42 C56,50 48,52 48,58 L52,58" stroke="white" strokeWidth="3.5" strokeLinecap="round" fill="none" />
-            </svg>
-            <span className="text-white font-black text-[9px] -mt-0.5 tracking-tighter">নগদ</span>
-          </div>
+          {settings.nagadLogoUrl ? (
+            <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow-md border border-[#ED1C24]/30 relative overflow-hidden p-1 active:scale-95 transition-transform">
+              <img src={settings.nagadLogoUrl} alt="Nagad" className="w-full h-full object-contain" />
+            </div>
+          ) : (
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-[#F7941D] to-[#ED1C24] flex flex-col items-center justify-center shadow-md border border-[#ED1C24]/30 relative overflow-hidden p-0.5 active:scale-95 transition-transform">
+              <svg viewBox="0 0 100 100" className="w-7 h-7">
+                {/* Circular swirling rays */}
+                <path d="M50,15 A35,35 0 1,1 15,50 A35,35 0 0,1 50,15 M50,23 A27,27 0 1,0 77,50 A27,27 0 0,0 50,23 Z" fill="white" />
+                <circle cx="50" cy="50" r="10" fill="white" className="opacity-30" />
+                {/* Middle core flame */}
+                <path d="M44,42 C44,32 56,32 56,42 C56,50 48,52 48,58 L52,58" stroke="white" strokeWidth="3.5" strokeLinecap="round" fill="none" />
+              </svg>
+              <span className="text-white font-black text-[9px] -mt-0.5 tracking-tighter">নগদ</span>
+            </div>
+          )}
         </div>
       )
     },
@@ -182,22 +195,51 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({ orderDraft, setOrd
       instructions: 'উক্ত নাম্বারে সেন্ড মানি (Send Money) করবেন এবং নির্ধারিত অর্থ প্রদান করবেন কম বা বেশি হলে অর্ডার সফল হবে না ✅',
       renderLogo: () => (
         <div className="flex flex-col items-center justify-center py-1">
-          {/* Clean purple block with 3D paper airplane for Rocket */}
-          <div className="w-12 h-12 rounded-xl bg-[#8C3494] flex flex-col items-center justify-center shadow-md border border-[#8C3494]/30 relative overflow-hidden p-0.5 active:scale-95 transition-transform">
-            <svg viewBox="0 0 100 100" className="w-6.5 h-6.5">
-              {/* Paper airplane flying right-up */}
-              <path d="M15,65 L85,25 L55,80 L46,56 Z" fill="white" />
-              <path d="M46,56 L85,25 L15,65 Z" fill="#F3E8FF" />
-              <path d="M46,56 L55,80 L51,60 Z" fill="#D8B4FE" />
-            </svg>
-            <span className="text-white font-extrabold text-[8px] tracking-tighter -mt-0.5 leading-none">রকেট</span>
-          </div>
+          {settings.rocketLogoUrl ? (
+            <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow-md border border-[#8C3494]/30 relative overflow-hidden p-1 active:scale-95 transition-transform">
+              <img src={settings.rocketLogoUrl} alt="Rocket" className="w-full h-full object-contain" />
+            </div>
+          ) : (
+            <div className="w-12 h-12 rounded-xl bg-[#8C3494] flex flex-col items-center justify-center shadow-md border border-[#8C3494]/30 relative overflow-hidden p-0.5 active:scale-95 transition-transform">
+              <svg viewBox="0 0 100 100" className="w-6.5 h-6.5">
+                {/* Paper airplane flying right-up */}
+                <path d="M15,65 L85,25 L55,80 L46,56 Z" fill="white" />
+                <path d="M46,56 L85,25 L15,65 Z" fill="#F3E8FF" />
+                <path d="M46,56 L55,80 L51,60 Z" fill="#D8B4FE" />
+              </svg>
+              <span className="text-white font-extrabold text-[8px] tracking-tighter -mt-0.5 leading-none">রকেট</span>
+            </div>
+          )}
         </div>
       )
     }
   ];
 
-  const paymentMethodsList = [...standardMethods];
+  const customMethods = (settings.customPaymentMethods || []).map(cm => ({
+    id: cm.id,
+    label: cm.name,
+    displayName: cm.name,
+    number: cm.number,
+    isActive: cm.active !== false && Boolean(cm.number && cm.number.trim()),
+    offlineNotice: cm.offlineNotice || `${cm.name} পেমেন্ট সাময়িক সময়ের জন্য বন্ধ রয়েছে।`,
+    instructions: cm.instructions || 'উক্ত নাম্বারে সেন্ড মানি (Send Money) করবেন এবং নির্ধারিত অর্থ প্রদান করবেন কম বা বেশি হলে অর্ডার সফল হবে না ✅',
+    renderLogo: () => (
+      <div className="flex flex-col items-center justify-center py-1">
+        <div className="w-12 h-12 rounded-xl bg-neutral-900 flex items-center justify-center shadow-md border border-neutral-700 relative overflow-hidden p-1 active:scale-95 transition-transform">
+          {cm.logoUrl ? (
+            <img src={cm.logoUrl} alt={cm.name} className="w-full h-full object-contain" />
+          ) : (
+            <div className="flex flex-col items-center justify-center">
+              <Wallet className="w-6 h-6 text-emerald-400" />
+              <span className="text-[7px] font-bold text-neutral-300 truncate max-w-[40px]">{cm.name}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }));
+
+  const paymentMethodsList = [...standardMethods, ...customMethods];
 
   const selectedMethodObj = paymentMethodsList.find(m => m.id === paymentMethod) || paymentMethodsList[0];
 

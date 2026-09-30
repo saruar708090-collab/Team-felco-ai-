@@ -55,6 +55,115 @@ export const AdminPaymentSettings: React.FC<AdminPaymentSettingsProps> = ({ curr
   const [customInstructions, setCustomInstructions] = useState('');
   const [customActive, setCustomActive] = useState(true);
   const [customOfflineNotice, setCustomOfflineNotice] = useState('');
+  const [customLogoUrl, setCustomLogoUrl] = useState('');
+  const [isUploadingCustomLogo, setIsUploadingCustomLogo] = useState(false);
+  const [isUploadingBkashLogo, setIsUploadingBkashLogo] = useState(false);
+  const [isUploadingNagadLogo, setIsUploadingNagadLogo] = useState(false);
+  const [isUploadingRocketLogo, setIsUploadingRocketLogo] = useState(false);
+
+  const handleMethodLogoUpload = (
+    method: 'bkash' | 'nagad' | 'rocket',
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 3 * 1024 * 1024) {
+      alert('ফাইলের সাইজ ৩ এমবি (3MB)-এর নিচে হতে হবে।');
+      return;
+    }
+
+    if (method === 'bkash') setIsUploadingBkashLogo(true);
+    if (method === 'nagad') setIsUploadingNagadLogo(true);
+    if (method === 'rocket') setIsUploadingRocketLogo(true);
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const max_size = 300;
+
+        if (width > height) {
+          if (width > max_size) {
+            height *= max_size / width;
+            width = max_size;
+          }
+        } else {
+          if (height > max_size) {
+            width *= max_size / height;
+            height = max_size;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        if (method === 'bkash') {
+          setSettings(prev => ({ ...prev, bkashLogoUrl: dataUrl }));
+          setIsUploadingBkashLogo(false);
+        } else if (method === 'nagad') {
+          setSettings(prev => ({ ...prev, nagadLogoUrl: dataUrl }));
+          setIsUploadingNagadLogo(false);
+        } else if (method === 'rocket') {
+          setSettings(prev => ({ ...prev, rocketLogoUrl: dataUrl }));
+          setIsUploadingRocketLogo(false);
+        }
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCustomLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 3 * 1024 * 1024) {
+      alert('ফাইলের সাইজ ৩ এমবি (3MB)-এর নিচে হতে হবে।');
+      return;
+    }
+
+    setIsUploadingCustomLogo(true);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const max_size = 300;
+
+        if (width > height) {
+          if (width > max_size) {
+            height *= max_size / width;
+            width = max_size;
+          }
+        } else {
+          if (height > max_size) {
+            width *= max_size / height;
+            height = max_size;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        setCustomLogoUrl(dataUrl);
+        setIsUploadingCustomLogo(false);
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
 
   useEffect(() => {
     fetchSettings();
@@ -172,6 +281,7 @@ export const AdminPaymentSettings: React.FC<AdminPaymentSettingsProps> = ({ curr
     setCustomInstructions('Send Money to this account/wallet.');
     setCustomActive(true);
     setCustomOfflineNotice('');
+    setCustomLogoUrl('');
     setCustomModalOpen(true);
   };
 
@@ -183,6 +293,7 @@ export const AdminPaymentSettings: React.FC<AdminPaymentSettingsProps> = ({ curr
     setCustomInstructions(method.instructions || '');
     setCustomActive(method.active !== false);
     setCustomOfflineNotice(method.offlineNotice || '');
+    setCustomLogoUrl(method.logoUrl || '');
     setCustomModalOpen(true);
   };
 
@@ -201,7 +312,8 @@ export const AdminPaymentSettings: React.FC<AdminPaymentSettingsProps> = ({ curr
       accountType: customAccountType,
       instructions: customInstructions.trim(),
       active: customActive,
-      offlineNotice: customOfflineNotice.trim()
+      offlineNotice: customOfflineNotice.trim(),
+      logoUrl: customLogoUrl.trim() || ''
     };
 
     setSettings(prev => {
@@ -361,6 +473,45 @@ export const AdminPaymentSettings: React.FC<AdminPaymentSettingsProps> = ({ curr
                       className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-2.5 py-1.5 text-[11px] text-neutral-300 focus:outline-none focus:border-red-500"
                     />
                   </div>
+
+                  {/* bKash Logo Upload */}
+                  <div className="pt-2 border-t border-neutral-800/80">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-[10px] uppercase font-bold text-neutral-400">
+                        বিকাশ লোগো (Payment Logo)
+                      </label>
+                      {settings.bkashLogoUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setSettings(prev => ({ ...prev, bkashLogoUrl: '' }))}
+                          className="text-[10px] text-red-400 hover:text-red-300 font-bold hover:underline"
+                        >
+                          ডিফল্ট লোগো রিসেট
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-10 h-10 rounded-xl bg-black border border-neutral-800 flex items-center justify-center shrink-0 overflow-hidden p-1">
+                        {settings.bkashLogoUrl ? (
+                          <img src={settings.bkashLogoUrl} alt="bKash" className="w-full h-full object-contain" />
+                        ) : (
+                          <div className="w-full h-full rounded-lg bg-[#E2136E] flex items-center justify-center text-white text-[9px] font-black">
+                            bKash
+                          </div>
+                        )}
+                      </div>
+                      <label className="flex-1 py-2 px-3 bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 rounded-xl text-xs font-bold text-neutral-300 cursor-pointer flex items-center justify-center gap-1.5 transition-colors">
+                        <Upload className="w-3.5 h-3.5 text-[#DF146E]" />
+                        <span>{isUploadingBkashLogo ? 'আপলোড হচ্ছে...' : settings.bkashLogoUrl ? 'লোগো পরিবর্তন' : 'গ্যালারি থেকে লোগো'}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={e => handleMethodLogoUpload('bkash', e)}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Nagad */}
@@ -414,6 +565,45 @@ export const AdminPaymentSettings: React.FC<AdminPaymentSettingsProps> = ({ curr
                       placeholder="যেমন: নগদ সাময়িক সময়ের জন্য বন্ধ..."
                       className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-2.5 py-1.5 text-[11px] text-neutral-300 focus:outline-none focus:border-red-500"
                     />
+                  </div>
+
+                  {/* Nagad Logo Upload */}
+                  <div className="pt-2 border-t border-neutral-800/80">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-[10px] uppercase font-bold text-neutral-400">
+                        নগদ লোগো (Payment Logo)
+                      </label>
+                      {settings.nagadLogoUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setSettings(prev => ({ ...prev, nagadLogoUrl: '' }))}
+                          className="text-[10px] text-red-400 hover:text-red-300 font-bold hover:underline"
+                        >
+                          ডিফল্ট লোগো রিসেট
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-10 h-10 rounded-xl bg-black border border-neutral-800 flex items-center justify-center shrink-0 overflow-hidden p-1">
+                        {settings.nagadLogoUrl ? (
+                          <img src={settings.nagadLogoUrl} alt="Nagad" className="w-full h-full object-contain" />
+                        ) : (
+                          <div className="w-full h-full rounded-lg bg-gradient-to-tr from-[#F7941D] to-[#ED1C24] flex items-center justify-center text-white text-[9px] font-black">
+                            নগদ
+                          </div>
+                        )}
+                      </div>
+                      <label className="flex-1 py-2 px-3 bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 rounded-xl text-xs font-bold text-neutral-300 cursor-pointer flex items-center justify-center gap-1.5 transition-colors">
+                        <Upload className="w-3.5 h-3.5 text-[#F97316]" />
+                        <span>{isUploadingNagadLogo ? 'আপলোড হচ্ছে...' : settings.nagadLogoUrl ? 'লোগো পরিবর্তন' : 'গ্যালারি থেকে লোগো'}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={e => handleMethodLogoUpload('nagad', e)}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
                   </div>
                 </div>
 
@@ -469,6 +659,45 @@ export const AdminPaymentSettings: React.FC<AdminPaymentSettingsProps> = ({ curr
                       className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-2.5 py-1.5 text-[11px] text-neutral-300 focus:outline-none focus:border-red-500"
                     />
                   </div>
+
+                  {/* Rocket Logo Upload */}
+                  <div className="pt-2 border-t border-neutral-800/80">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-[10px] uppercase font-bold text-neutral-400">
+                        রকেট লোগো (Payment Logo)
+                      </label>
+                      {settings.rocketLogoUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setSettings(prev => ({ ...prev, rocketLogoUrl: '' }))}
+                          className="text-[10px] text-red-400 hover:text-red-300 font-bold hover:underline"
+                        >
+                          ডিফল্ট লোগো রিসেট
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-10 h-10 rounded-xl bg-black border border-neutral-800 flex items-center justify-center shrink-0 overflow-hidden p-1">
+                        {settings.rocketLogoUrl ? (
+                          <img src={settings.rocketLogoUrl} alt="Rocket" className="w-full h-full object-contain" />
+                        ) : (
+                          <div className="w-full h-full rounded-lg bg-[#8C3494] flex items-center justify-center text-white text-[9px] font-black">
+                            রকেট
+                          </div>
+                        )}
+                      </div>
+                      <label className="flex-1 py-2 px-3 bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 rounded-xl text-xs font-bold text-neutral-300 cursor-pointer flex items-center justify-center gap-1.5 transition-colors">
+                        <Upload className="w-3.5 h-3.5 text-[#A855F7]" />
+                        <span>{isUploadingRocketLogo ? 'আপলোড হচ্ছে...' : settings.rocketLogoUrl ? 'লোগো পরিবর্তন' : 'গ্যালারি থেকে লোগো'}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={e => handleMethodLogoUpload('rocket', e)}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -488,22 +717,31 @@ export const AdminPaymentSettings: React.FC<AdminPaymentSettingsProps> = ({ curr
                         }`}
                       >
                         <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-black text-sm text-white">{m.name}</span>
-                              <span className="text-[9px] bg-neutral-800 text-neutral-400 px-2 py-0.5 rounded font-mono">
-                                {m.accountType || 'Personal'}
+                          <div className="flex items-center gap-2.5">
+                            {m.logoUrl ? (
+                              <img src={m.logoUrl} alt={m.name} className="w-9 h-9 rounded-xl object-contain bg-black border border-neutral-800 p-0.5 shrink-0" />
+                            ) : (
+                              <div className="w-9 h-9 rounded-xl bg-neutral-800 flex items-center justify-center shrink-0">
+                                <Smartphone className="w-4 h-4 text-emerald-400" />
+                              </div>
+                            )}
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-black text-sm text-white">{m.name}</span>
+                                <span className="text-[9px] bg-neutral-800 text-neutral-400 px-2 py-0.5 rounded font-mono">
+                                  {m.accountType || 'Personal'}
+                                </span>
+                              </div>
+                              <span className="text-xs font-mono text-emerald-400 font-bold block mt-0.5">
+                                {m.number}
                               </span>
                             </div>
-                            <span className="text-xs font-mono text-emerald-400 font-bold block mt-1">
-                              {m.number}
-                            </span>
                           </div>
 
                           <button
                             type="button"
                             onClick={() => handleToggleCustomActive(m.id)}
-                            className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase cursor-pointer ${
+                            className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase cursor-pointer shrink-0 ${
                               m.active
                                 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
                                 : 'bg-red-500/10 text-red-400 border border-red-500/30'
@@ -859,6 +1097,44 @@ export const AdminPaymentSettings: React.FC<AdminPaymentSettingsProps> = ({ curr
                     placeholder="এই নাম্বারে/ঠিকানায় পেমেন্ট পাঠিয়ে TrxID দিন..."
                     className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
                   />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-1">
+                    Logo Image (লোগো বা আইকন - গ্যালারি থেকে আপলোড)
+                  </label>
+                  <div className="flex gap-2 items-center">
+                    <input
+                      type="url"
+                      value={customLogoUrl}
+                      onChange={e => setCustomLogoUrl(e.target.value)}
+                      placeholder="https://... অথবা গ্যালারি থেকে আপলোড করুন"
+                      className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
+                    />
+                    <label className="px-3.5 py-2.5 bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl text-xs font-bold cursor-pointer shrink-0 flex items-center gap-1.5 transition-colors">
+                      <Upload className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>{isUploadingCustomLogo ? 'আপলোড হচ্ছে...' : 'গ্যালারি'}</span>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={handleCustomLogoUpload} 
+                        className="hidden" 
+                      />
+                    </label>
+                  </div>
+                  {customLogoUrl && (
+                    <div className="mt-2 flex items-center gap-3 bg-black p-2 rounded-xl border border-neutral-800">
+                      <img src={customLogoUrl} alt="Logo" className="w-7 h-7 rounded object-cover bg-neutral-900" />
+                      <span className="text-[10px] text-emerald-400 font-mono truncate flex-1">লোগো সংযুক্ত হয়েছে</span>
+                      <button 
+                        type="button" 
+                        onClick={() => setCustomLogoUrl('')}
+                        className="text-red-400 text-[10px] font-bold hover:underline px-2"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div>

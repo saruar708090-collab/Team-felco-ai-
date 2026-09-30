@@ -473,47 +473,7 @@ export const AdminGames: React.FC<AdminGamesProps> = ({ currentRoute, navigate }
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-1">
-                      Badge Background Color
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="color"
-                        value={badgeBg}
-                        onChange={e => setBadgeBg(e.target.value)}
-                        className="w-10 h-10 rounded-lg cursor-pointer bg-transparent border-0"
-                      />
-                      <input
-                        type="text"
-                        value={badgeBg}
-                        onChange={e => setBadgeBg(e.target.value)}
-                        className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-2 py-2 text-xs font-mono text-white"
-                      />
-                    </div>
-                  </div>
 
-                  <div>
-                    <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 block mb-1">
-                      Badge Text Color
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="color"
-                        value={badgeText}
-                        onChange={e => setBadgeText(e.target.value)}
-                        className="w-10 h-10 rounded-lg cursor-pointer bg-transparent border-0"
-                      />
-                      <input
-                        type="text"
-                        value={badgeText}
-                        onChange={e => setBadgeText(e.target.value)}
-                        className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-2 py-2 text-xs font-mono text-white"
-                      />
-                    </div>
-                  </div>
-                </div>
 
                 {/* Badge Live Preview */}
                 <div>

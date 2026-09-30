@@ -65,6 +65,7 @@ export interface CustomPaymentMethod {
   offlineNotice?: string;
   iconType?: 'bkash' | 'nagad' | 'rocket' | 'binance' | 'upay' | 'bank' | 'generic';
   badgeColor?: string;
+  logoUrl?: string;
 }
 
 export interface StoreSettings {
@@ -92,12 +93,15 @@ export interface StoreSettings {
   bkashNumber: string;
   bkashActive?: boolean;
   bkashOfflineNotice?: string;
+  bkashLogoUrl?: string;
   nagadNumber: string;
   nagadActive?: boolean;
   nagadOfflineNotice?: string;
+  nagadLogoUrl?: string;
   rocketNumber: string;
   rocketActive?: boolean;
   rocketOfflineNotice?: string;
+  rocketLogoUrl?: string;
   customPaymentMethods?: CustomPaymentMethod[];
   autoVerifyEnabled?: boolean;
   paymentInstructions: string;
